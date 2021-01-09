@@ -7,7 +7,23 @@
 #import time
 
 #https://stackoverflow.com/questions/59110136/why-is-pythons-serial-read-serial-read-until-returning-garbage-after-4-bytes
+#https://pypi.org/project/pyshtrih/#id4
+# драйвер кассы
+#https://www.programcreek.com/python/?code=oleg-golovanov%2Fpyshtrih%2Fpyshtrih-master%2Fpyshtrih%2Fprotocol.py#
 
+
+txthelp = '''- - - - - - - - - - - - - - 
+Команды :
+1 \t\t- проверка связи  ККМ
+open\t- открытие смены
+открыть\t- открытие смены
+z \t\t- закрытие смены (Z-отчёт)
+x \t\t- отчёт без гашения (X-отчёт)
+
+911 \t- консольный режим ввода команд
+? \t\t- вывод подсказки
+- - - - - - - - - - - - - -
+'''
 
 
 def fid():
@@ -221,9 +237,12 @@ def byte_to_str(b):
 
 
 def str_to_byte(s):
-    tmpBuffer1 = bytearray([])
-    for ss in s:
-        tmpBuffer1.append(ord(ss))
+    try:
+        tmpBuffer1 = bytearray([])
+        for ss in s:
+            tmpBuffer1.append(ord(ss))
+    except:
+        print(f"Error {s}, {tmpBuffer1}")
     return tmpBuffer1
 
 

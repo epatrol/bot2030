@@ -1,4 +1,4 @@
-ver = "09/01/2021 10:48"
+ver = "09/01/2021 21:36"
 
 from socketserver import ThreadingMixIn
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -26,6 +26,9 @@ from kdef2021 import str_to_byte
 from kdef2021 import cod00
 from kdef2021 import cod02
 from kdef2021 import cod04
+from kdef2021 import txthelp
+
+from command import command
 
 # requests.post('http://localhost:1212',data='{  "BillType": 2,  "BillOtdel": "",  "BillKassir": "Иванов",  "BillNumDoc": "",  "BillTax": "3",  "BarCodeHeader": {  "BarcodeType": "PDF417",  "Barcode": "www.pavlyukevich.ru"  },  "CheckStrings": [  {  "Name": "Сотовый телефон Nokia 3310",  "Art": 1,  "Quantity": 1,  "Price": 0.10,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  },  {  "Name": "Сотовый телефон Nokia 3410",  "Art": 1,  "Quantity": 1,  "Price": 0.50,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  }  ],  "Cash": 0.60,  "PayByCard": 0,  "PayByCredit": 0,  "PayByCertificate": 0,  "ClientTel": "",  "BarCodeFooter": {  "BarcodeType": "CODEQR",  "Barcode": "www.pavlyukevich.ru"  } }'.encode('utf-8'))
 
@@ -33,7 +36,29 @@ from kdef2021 import cod04
 # requests.post('http://localhost:1212',data=a.encode('utf-8'))
 import sys
 
+cifra={
+    0: [' *** ','*   *','*   *','*   *','*   *','*   *',' *** '],
+    1: ['  *  ',' **  ','  *  ','  *  ','  *  ','  *  ','  *  '],
+    2: [' *** ', '*   *', '    *', '   * ', '  *  ', ' *   ', '*****'],
+    3: ['*****', '   * ', '  *  ', '   * ', '    *', '*   *', ' *** '],
+    4: ['   * ', '  ** ', ' * * ', '*  * ', '*****', '   * ', '   * '],
+    5: ['*****', '*    ', '**** ', '    *', '    *', '*   *', ' *** '],
+    6: ['     ', '     ', '     ', '     ', '     ', '     ', '     '],
+    7: ['     ', '     ', '     ', '     ', '     ', '     ', '     '],
+    8: ['     ', '     ', '     ', '     ', '     ', '     ', '     '],
+    9: ['     ', '     ', '     ', '     ', '     ', '     ', '     '],
 
+}
+
+STX = '\x02'  # 0x02
+ETX = '\x03'  # 0x03
+PASS = 'PIRI'
+ENQ = '\x05'  # 0x03
+ACK = '\x06'  # 0x03
+FS = '\x1c'  # 0x1C
+LF = '\x0A'  # 0x0A перемотка бумаги
+
+# Поток получения информации из ККТ
 def thread_function1(name):  # из KKT получаем
     global pport
     global txtpost
@@ -74,10 +99,11 @@ def thread_function1(name):  # из KKT получаем
             elif pport == 2:
                 portout2.write(bytes_to_read)
             elif pport == 3:  # работа с кассой из консоли
-                print("... работа с кассой из консоли ...")
-                # print(f"K>{pport}: ", [f'{i}:{kOut1[i]}' for i in ['id', 'cod', 'error', 'data']])
-                print(
-                    f"{s} K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}")  # for i in ['id', 'cod', 'error', 'data']])")
+                pass
+            #    print("... работа с кассой из консоли ...")
+            #    # print(f"K>{pport}: ", [f'{i}:{kOut1[i]}' for i in ['id', 'cod', 'error', 'data']])
+            #    print(
+            #        f"{s} K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}")  # for i in ['id', 'cod', 'error', 'data']])")
 
 
 
@@ -111,7 +137,7 @@ def thread_function1(name):  # из KKT получаем
         # wait = True
         ###print('закончил передачу')
 
-
+# Поток получения информация из Порта 1
 def thread_function2(name):
     global pport
 
@@ -143,7 +169,7 @@ def thread_function2(name):
         except e:
             print("Ошибка в функции/ Порт1", e)
 
-
+# Поток получения информация из Порта 2
 def thread_function3(name):
     global pport
 
@@ -205,6 +231,7 @@ def thread_function3(name):
             logging.error("Ошибка в модуле получения данных. Порт2")
 
 
+# Поток получения информация из Консоли
 def thread_maincourceA(name):  #
     global inKKT
     global inSOFT
@@ -216,7 +243,7 @@ def thread_maincourceA(name):  #
 
     l = range(33, 126)
     while True:
-        inp = input()
+        inp = input("")
         # if inp == 'exit':
         #    print('exit1')
         #    sys.exit()
@@ -230,7 +257,8 @@ def thread_maincourceA(name):  #
             # print(f"{sss}")
             print('X-Отчёт')
             portin.write(sss)
-
+        elif inp in ['help', 'h', 'H', 'HELP', 'Help', 'р']:  # z - отчёт
+            print(txthelp)
         elif inp in ['Z', 'z', 'Я', 'я']:  # z - отчёт
             pport = 3
             # ll = chr(random.choice(l))
@@ -250,7 +278,7 @@ def thread_maincourceA(name):  #
             portin.write(sss)
 
 
-        elif inp in ['00']:  # z - отчёт
+        elif inp in ['00']:  # z - состояние кассы
             pport = 3
             # ll = chr(random.choice(l))
             sss = new_str(fid(), '00', '0')
@@ -343,24 +371,139 @@ def thread_maincourceA(name):  #
         elif inp == '911':
             pport = 3
             com = input("Консольный режим работы с кассой \nВведите команду : ")
-            print("Введите параметры, окончание - пустой параметр (Enter)")
-            param = []
-            p = '1'
-            i = 0
-            while p != '':
-                p = input(f"Параметр {i}: ")
-                i += 1
-                if p != '':
-                    param.append(rus(p))
-            if input("Введите 1 для отправки ") == '1':
-                # ll = chr(random.choice(l))
-                # ll='R'
-                sss = new_str(fid(), com, param)  # f"{ll}"
-                print(sss)
-                print(f"{sss}")
+            # проверка на список доступных команд, если нет в списке - исключение
+            try:
+                print(f"{com} # {command[com]}")
+                print("Введите параметры, окончание - пустой параметр (Enter)")
+                param = []
+                p = '1'
+                i = 0
+                while p != '':
+                    p = input(f"Параметр {i}: ")
+                    i += 1
+                    if p != '':
+                        param.append(rus(p))
+                if input("Введите 1 для отправки ") == '1':
+                    # ll = chr(random.choice(l))
+                    # ll='R'
+                    sss = new_str(fid(), com, param)  # f"{ll}"
+                    print(sss)
+                    print(f"{sss}")
+                    portin.write(sss)
+                else:
+                    print("Отмена отправки")
+            except:
+                print('#! НЕДОПУСТИМАЯ КОМАНДА')
+        elif inp == '900':
+            '''
+00
+01 1
+01 2
+01 3
+01 4
+01 5 
+01 6
+01 7
+01 8
+01 9
+01 10
+01 11
+01 12
+01 13
+01 14
+01 15
+01 16
+01 17
+01 18
+end
+        
+30|1|0|0|0|0
+40|ROTOR|1
+40 SPARTAK 1
+40 DINAMO 1
+40 ROTOR 1
+40 SPARTAK 1
+40 DINAMO 1
+40 ROTOR 1
+40 SPARTAK 1
+40 Правила 1
+32
+end
+
+
+30|1|0|0|0|0
+40|1 	Зенит       41|1
+40|2 	ЦСКА        37|1
+40|3 	Спартак М   35|1
+40|4 	Сочи        33|1
+40|5 	Ростов      32|1
+40|6 	Динамо М    30|1
+40|7 	Краснодар   30|1
+40|8 	Локомотив М 28|1
+40|9 	Рубин       28|1
+40|10	Ахмат       26|1
+40|11	Химки       25|1
+40|12	Урал        21|1
+40|13	Ротор       14|1
+40|14	Арсенал     14|1
+40|15	Уфа         13|1
+40|16	Тамбов      13|1
+32
+end
+
+30|1|0|0|0|0
+40|*   ***  *** *****   * ********|1  
+40|*  *   **   *   *   ** *       |1  
+40|*  *   *    *  *   * * ****   *|1  
+40|*  *   *   *    * *  *     *   |1  
+40|*  *   *  *      ******    *   |1  
+40|*  *   * *   *   *   * *   **  |1  
+40|*   *** ***** ***    *  ***  **|1              
+32
+end
+
+
+
+30|1|0|0|0|0
+40| К А С С А|1
+40||1
+40||1
+40|  *   ***   ***  *****    *  ***** *****    *   ***    *|1
+40| **  *   * *   *    *    **  *        *    **  *   *  **|1
+40|  *  *   *     *   *    * *  ****    *    * *      *   *|1
+40|  *  *   *    *     *  *  *      *    *  *  *     *    *|1
+40|  *  *   *   *       * *****     *     * *****   *     *|1
+40|  *  *   *  *    *   *    *  *   * *   *    *   *      *|1
+40| *** ***  *****  ***     *   ***   ***     *  *****  ***|1
+32
+end
+            '''
+            pport = 3
+            print("Консольный режим работы с кассой \nКоманда + параметры через пробел \n "
+                  "Отправить - последняя строка end")
+            com900 = input()
+
+            while com900 != 'end':
+                print(f'com900={com900}')
+                if '|' in com900:
+                    com101, com901 = com900.split('|', 1)
+                    param = rus(com901).split('|')
+                else:
+                    com101 = com900
+                    param = []
+                # проверка на список доступных команд, если нет в списке - исключение
+                print(f"{com101} # {command[com101]}")
+                sss = new_str(fid(), com101, param)  # f"{ll}"
+                #print(sss)
+                #print(f"{sss}")
                 portin.write(sss)
-            else:
-                print("Отмена отправки")
+                #time.sleep(0.5)
+                com900 = input()
+#            except:
+#                    print(f'{com101} #! НЕДОПУСТИМАЯ КОМАНДА')
+
+
+
         elif inp == '922':
             pport = 3
             d = input("Отправка на кассу строки (без контрольной суммы) : ")
@@ -448,7 +591,7 @@ def kkm_txt(a):
     # wait = False
     # print(f"wait = {wait}")
 
-
+# Работа с веб интерфейсом
 class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         global wait
@@ -461,7 +604,7 @@ class Handler(BaseHTTPRequestHandler):
         data = data.replace("\r", "|")
         data = data.replace("\n", "|")
         j = json.loads(data.encode('utf-8').decode('utf-8-sig'))
-        # print(f"post.json:{j}")
+        print(f"post.json:{j}")
 
         wait = True
 
@@ -527,8 +670,6 @@ def serve_on_port(sip, sport):
     except KeyboardInterrupt:
         print("^C received, shutting down server")
         server.socket.close()
-
-
 # - ------------------------------------
 
 txtpost = ""
@@ -595,14 +736,10 @@ logging.debug(f"порты подключены")
 print(f"Программа запущена. Не закрывайте меня. версия {ver}")
 # print(f"Порты для подключения:")
 
-print('''Команды :
-1 - проверка связи  ККМ
-open (открыть) - открытие смены
-z - закрытие смены (Z-отчёт)
-x - отчёт без гашения (X-отчёт)
 
-911 - консольный режим ввода команд
-''')
+
+
+print(txthelp)
 
 # PortOnn = {}
 wait = True
@@ -624,8 +761,8 @@ z.start()
 # - ------------------------------------
 
 
-IP = "0.0.0.0"
-Port = 1212
+IP = config['WEB']['IP'] #"0.0.0.0"
+Port = config['WEB']['Port'] # 1212
 
 txtA = ""
 maincource = threading.Thread(target=thread_maincourceA, args=(1,))
