@@ -283,7 +283,7 @@ def thread_maincourceA(name):  #
             # print(f"{sss}")
             print('X-Отчёт')
             portin.write(sss)
-        elif inp in ['help', 'h', 'H', 'HELP', 'Help', 'р']:  # z - отчёт
+        elif inp in ['help', 'h', 'H', 'HELP', 'Help', 'р', '?']:  # z - отчёт
             print(txthelp)
         elif inp in ['Z', 'z', 'Я', 'я']:  # z - отчёт
             pport = 3
@@ -711,7 +711,7 @@ print(f"Программа запущена. Не закрывайте меня.
 
 
 
-print("Введите ? для вывода списка команд")
+print("help - для вывода списка команд")
 
 # PortOnn = {}
 wait = True
