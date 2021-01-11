@@ -508,6 +508,7 @@ def thread_maincourceA(name):  #
             global1 = True
 
 
+
 def kkm_txt(a):
     global pport
     global txtpost
@@ -635,7 +636,7 @@ spisok_id = ['id', 'cod', 'data']
 
 try:
     config = configparser.ConfigParser()
-    config.read('yakassa.ini')
+    config.read('kassa2021.ini')
     COMIN = config['DEFAULT']['COMPROXYKASSA']  # 'COM7' # порт компрокси для кассы
     COMOUT = config['DEFAULT']['COM1C1']  # 'COM15'  # порт указывается в 1с для подключения кассы
     COMOUT2 = config['DEFAULT']['COM1C2']  # 'COM7'
@@ -710,11 +711,10 @@ print(f"Программа запущена. Не закрывайте меня.
 
 
 
-print(txthelp)
+print("Введите ? для вывода списка команд")
 
 # PortOnn = {}
 wait = True
-
 # def hello():
 #    print("hello, world")
 #
