@@ -1,4 +1,4 @@
-ver = "09/01/2021 21:36"
+ver = "11/01/2021 09:18"
 
 from socketserver import ThreadingMixIn
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -32,23 +32,9 @@ from command import command
 
 # requests.post('http://localhost:1212',data='{  "BillType": 2,  "BillOtdel": "",  "BillKassir": "Иванов",  "BillNumDoc": "",  "BillTax": "3",  "BarCodeHeader": {  "BarcodeType": "PDF417",  "Barcode": "www.pavlyukevich.ru"  },  "CheckStrings": [  {  "Name": "Сотовый телефон Nokia 3310",  "Art": 1,  "Quantity": 1,  "Price": 0.10,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  },  {  "Name": "Сотовый телефон Nokia 3410",  "Art": 1,  "Quantity": 1,  "Price": 0.50,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  }  ],  "Cash": 0.60,  "PayByCard": 0,  "PayByCredit": 0,  "PayByCertificate": 0,  "ClientTel": "",  "BarCodeFooter": {  "BarcodeType": "CODEQR",  "Barcode": "www.pavlyukevich.ru"  } }'.encode('utf-8'))
 
-# a = '{  "BillType": 666, "El":[{"Command" : "30" , "Arg" : [49,1,"Popov",100,4]},{"Command" : "40" , "Arg" : ["Проверка текста.Малый текст.0123456789[43]1234",0]},{"Command" : "40" , "Arg" : ["Широкий>>>>>>>>>[20]>",32]},{"Command" : "40" , "Arg" : ["ВЫСОКИЙ ШРИФТ4567890123456789012345678[42]3",16]},{"Command" : "40" , "Arg" : ["подчеркнуть",128]},{"Command" : "41" , "Arg" : [0,5,0,8,"t=20200203T1604&s=1.00&fn=9287440300026894&i=34014&fp=2972911564&n=1"]},{"Command" : "31" , "Arg" : [0,"a@a-34.ru"]}    ]}'
+# a = '{  "BillType": 666, "El":[{"Command" : "30" , "Arg" : [49,1,"Popov",100,4]},{"Command" : "40" , "Arg" : ["Проверка текста.Малый текст.0123456789[43]1234",0]},{"Command" : "40" , "Arg" : ["Широкий>>>>>>>>>[20]>",32]},{"Command" : "40" , "Arg" : ["ВЫСОКИЙ ШРИФТ4567890123456789012345678[42]3",16]},{"Command" : "40" , "Arg" : ["подчеркнуть",128]},{"Command" : "41" , "Arg" : [0,5,0,8,"t=20200203T1604&s=1.00&fn=9287440300026894&i=34014&fp=2972911564&n=1"]},{"Command" : "32" , "Arg" : [0,"a@a-34.ru"]}    ]}'
 # requests.post('http://localhost:1212',data=a.encode('utf-8'))
 import sys
-
-cifra={
-    0: [' *** ','*   *','*   *','*   *','*   *','*   *',' *** '],
-    1: ['  *  ',' **  ','  *  ','  *  ','  *  ','  *  ','  *  '],
-    2: [' *** ', '*   *', '    *', '   * ', '  *  ', ' *   ', '*****'],
-    3: ['*****', '   * ', '  *  ', '   * ', '    *', '*   *', ' *** '],
-    4: ['   * ', '  ** ', ' * * ', '*  * ', '*****', '   * ', '   * '],
-    5: ['*****', '*    ', '**** ', '    *', '    *', '*   *', ' *** '],
-    6: ['     ', '     ', '     ', '     ', '     ', '     ', '     '],
-    7: ['     ', '     ', '     ', '     ', '     ', '     ', '     '],
-    8: ['     ', '     ', '     ', '     ', '     ', '     ', '     '],
-    9: ['     ', '     ', '     ', '     ', '     ', '     ', '     '],
-
-}
 
 STX = '\x02'  # 0x02
 ETX = '\x03'  # 0x03
@@ -57,6 +43,7 @@ ENQ = '\x05'  # 0x03
 ACK = '\x06'  # 0x03
 FS = '\x1c'  # 0x1C
 LF = '\x0A'  # 0x0A перемотка бумаги
+lastfid = 0
 
 # Поток получения информации из ККТ
 def thread_function1(name):  # из KKT получаем
@@ -105,8 +92,6 @@ def thread_function1(name):  # из KKT получаем
             #    print(
             #        f"{s} K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}")  # for i in ['id', 'cod', 'error', 'data']])")
 
-
-
             elif pport == 4:  # работа с POST
                 # self.wfile.write(bytes(s, "utf-8"))
                 # tpost =(f"K>{pport}: ", [f'{i}:{kOut1[i]}' for i in ['id', 'cod', 'error', 'data']])
@@ -116,6 +101,17 @@ def thread_function1(name):  # из KKT получаем
                 if byte_to_str(kOut1['id']) == last_cod:  # b'31':
                     wait = False
                 # print(f"txtpost:{txtpost}")
+
+            elif pport == 5:  # работа с POST
+                # self.wfile.write(bytes(s, "utf-8"))
+                # tpost =(f"K>{pport}: ", [f'{i}:{kOut1[i]}' for i in ['id', 'cod', 'error', 'data']])
+                tpost = f"K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}"  # for i in ['id', 'cod', 'error', 'data']])"
+                txtpost += f"{s} {tpost}\n<BR>"
+                print(f"{byte_to_str(kOut1['id'])} = {last_cod}")
+                if byte_to_str(kOut1['id']) == last_cod:  # b'31':
+                    wait = False
+                # print(f"txtpost:{txtpost}")
+
             else:
                 print("ERROR PORT!!!!")
 
@@ -395,89 +391,6 @@ def thread_maincourceA(name):  #
             except:
                 print('#! НЕДОПУСТИМАЯ КОМАНДА')
         elif inp == '900':
-            '''
-00
-01 1
-01 2
-01 3
-01 4
-01 5 
-01 6
-01 7
-01 8
-01 9
-01 10
-01 11
-01 12
-01 13
-01 14
-01 15
-01 16
-01 17
-01 18
-end
-        
-30|1|0|0|0|0
-40|ROTOR|1
-40 SPARTAK 1
-40 DINAMO 1
-40 ROTOR 1
-40 SPARTAK 1
-40 DINAMO 1
-40 ROTOR 1
-40 SPARTAK 1
-40 Правила 1
-32
-end
-
-
-30|1|0|0|0|0
-40|1 	Зенит       41|1
-40|2 	ЦСКА        37|1
-40|3 	Спартак М   35|1
-40|4 	Сочи        33|1
-40|5 	Ростов      32|1
-40|6 	Динамо М    30|1
-40|7 	Краснодар   30|1
-40|8 	Локомотив М 28|1
-40|9 	Рубин       28|1
-40|10	Ахмат       26|1
-40|11	Химки       25|1
-40|12	Урал        21|1
-40|13	Ротор       14|1
-40|14	Арсенал     14|1
-40|15	Уфа         13|1
-40|16	Тамбов      13|1
-32
-end
-
-30|1|0|0|0|0
-40|*   ***  *** *****   * ********|1  
-40|*  *   **   *   *   ** *       |1  
-40|*  *   *    *  *   * * ****   *|1  
-40|*  *   *   *    * *  *     *   |1  
-40|*  *   *  *      ******    *   |1  
-40|*  *   * *   *   *   * *   **  |1  
-40|*   *** ***** ***    *  ***  **|1              
-32
-end
-
-
-
-30|1|0|0|0|0
-40| К А С С А|1
-40||1
-40||1
-40|  *   ***   ***  *****    *  ***** *****    *   ***    *|1
-40| **  *   * *   *    *    **  *        *    **  *   *  **|1
-40|  *  *   *     *   *    * *  ****    *    * *      *   *|1
-40|  *  *   *    *     *  *  *      *    *  *  *     *    *|1
-40|  *  *   *   *       * *****     *     * *****   *     *|1
-40|  *  *   *  *    *   *    *  *   * *   *    *   *      *|1
-40| *** ***  *****  ***     *   ***   ***     *  *****  ***|1
-32
-end
-            '''
             pport = 3
             print("Консольный режим работы с кассой \nКоманда + параметры через пробел \n "
                   "Отправить - последняя строка end")
@@ -494,8 +407,6 @@ end
                 # проверка на список доступных команд, если нет в списке - исключение
                 print(f"{com101} # {command[com101]}")
                 sss = new_str(fid(), com101, param)  # f"{ll}"
-                #print(sss)
-                #print(f"{sss}")
                 portin.write(sss)
                 #time.sleep(0.5)
                 com900 = input()
@@ -596,6 +507,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         global wait
         global txtpost
+        global last_cod
+        global pport
+        print("!!!!!!!!!!!!!!!!!")
+        txtpost=''
+        pport = 5
         length = int(self.headers.get('Content-length', 0))
         data = self.rfile.read(length).decode()
         print(data)
@@ -605,15 +521,26 @@ class Handler(BaseHTTPRequestHandler):
         data = data.replace("\n", "|")
         j = json.loads(data.encode('utf-8').decode('utf-8-sig'))
         print(f"post.json:{j}")
-
+        print(j['Type'])
+        last_cod = "stop"
         wait = True
+        for xx in j['Coms']:
+            print(xx['C'],xx['Arg'])
+            try:
+                xx['Arg'][0]=rus(xx['Arg'][0])
+            except:
+                pass
+            my_fid = fid()
+            sss = new_str(my_fid, xx['C'], xx['Arg'])  # f"{ll}"
+            portin.write(sss)
+        last_cod = my_fid
 
-        if j['BillType'] == 666:
-            kkm_txt(j['El'])
+        #if j['BillType'] == 666:
+        #    kkm_txt(j['El'])
 
         while wait:
             # print(wait)
-            time.sleep(0.1)
+            time.sleep(0.05)
             pass
 
         self.send_response(200)
@@ -637,21 +564,21 @@ class Handler(BaseHTTPRequestHandler):
         s0 = '''<style  type = "text/css">
         p
         {
-            font - size: 80 %;
-        font - family: Georgia, 'Times New Roman', Times, serif;
+            font-size: 11;
+        font-family: Verdana, Arial, Helvetica, sans - serif;
         color:  # ff3366;
         }
         </style>
         '''
         # self.wfile.write(bytes(s0, "utf-8"))
-
         self.end_headers()
+        self.wfile.write(bytes(s0, "utf-8"))
         # self.wfile.write("Hello World!")
         now = datetime.now()
         s = datetime.strftime(datetime.now(), "%d.%m.%Y %H:%M:%S <br>\n \r")
         self.wfile.write(bytes(s, "utf-8"))
         self.wfile.write(bytes(
-            f"<br>{txtpost}<br><p>Сервер кассовых чеков запущен. <br>Работает. <br>Полёт нормальный!!!<br><br><br> \n \r ",
+            f"<p><br>{txtpost}<br></p><p>Сервер кассовых чеков запущен. <br>Работает. <br>Полёт нормальный!!!<br><br><br> \n \r ",
             "utf-8"))
         # result = self.response.json().get('result')
         # print(result)
@@ -738,7 +665,6 @@ print(f"Программа запущена. Не закрывайте меня.
 
 
 
-
 print(txthelp)
 
 # PortOnn = {}
@@ -762,7 +688,8 @@ z.start()
 
 
 IP = config['WEB']['IP'] #"0.0.0.0"
-Port = config['WEB']['Port'] # 1212
+Port = int(config['WEB']['Port']) # 1212
+
 
 txtA = ""
 maincource = threading.Thread(target=thread_maincourceA, args=(1,))
