@@ -39,6 +39,12 @@ from command import command
 # requests.post('http://localhost:1212',data=a.encode('utf-8'))
 import sys
 
+
+
+leveld = logging.DEBUG  # INFO
+logging.basicConfig(level=leveld, filename='kassa2021.log', format='%(asctime)s %(levelname)s:%(message)s')
+
+
 STX = '\x02'  # 0x02
 ETX = '\x03'  # 0x03
 PASS = 'PIRI'
@@ -156,47 +162,43 @@ def thread_function2(name):
 
                 kIn1 = kIn(bytes_to_read)
 
-                pbts=''
                 bts = byte_to_str(kIn1['data']).split('\x1c')
-
-                print(kIn1)
-                print(bts)
-
 
                 # 11/01/21 внести изменения в данные при неправильных
                 # коррекция чека для старых драйверов 1с
-                # начало блока
+                #
                 if (len(bts)<5)  and  kIn1['cod']==b'30' and bts[0]=='2':
                     #пересобрать строку отсылки
                     bytes_to_read = new_str(byte_to_str(kIn1['id']),byte_to_str(kIn1['cod']),[2,bts[1],bts[2],0,1])
-                    pbts = ''
                     kIn1 = kIn(bytes_to_read)
                     bts = byte_to_str(kIn1['data']).split('\x1c')
-                # конец блока
-                if (len(bts)>10)  and  kIn1['cod']==b'42':
+
+                if (len(bts)<5)  and  kIn1['cod']==b'42':
                     #пересобрать строку отсылки
-                    bytes_to_read = new_str(kIn1['id'],kIn1['cod'],[bts[0],bts[1],bts[2],bts[3],3,"",1,00,"",0,4,1])
-                    pbts = ''
+                    bytes_to_read = new_str(byte_to_str(kIn1['id']),byte_to_str(kIn1['cod']),[2,bts[1],bts[2],0,1])
                     kIn1 = kIn(bytes_to_read)
                     bts = byte_to_str(kIn1['data']).split('\x1c')
-                    bts[0] = str(str_to_byte(bts[0]), 'cp866')
-                    print(f"bts:{bts}")
+
+                #
                 # конец блока
+
+                #перекодировка данных в читаемый текст для вывода и лога
+                bts1 = [str(str_to_byte(btsx), 'cp866') for btsx in bts]
 
                 portin.write(bytes_to_read)
                 pport = 1
 
                 if bts != [] and bts !=['']:
                     pbts = f'data:{bts}'
-                print(f"1>K: ", [f'{r}:{kIn1[r]}' for r in ['id', 'cod']], f'{pbts}')
-                #txtpost+=f"1>K: ", [f'{r}:{byte_to_str(kIn1[r])}' for r in ['id', 'cod']], f'{pbts}'
+                txtprint = (f" 1>K: {[f'{r}:{byte_to_str(kIn1[r])}' for r in ['id', 'cod']]} data: {bts1}")
+                print(txtprint)
+                logging.debug(txtprint)
                 if global1:
                     print(f"1>K: {kIn1}")
                     print(bytes_to_read)
         except:
-            print("Ошибка в модуле получения данных. Порт1")
+            print(f"Ошибка :{traceback.format_exc()} в модуле получения данных. Порт1")
             logging.error("Ошибка в модуле получения данных. Порт1")
-
 
 # Поток получения информация из Порта 2
 def thread_function3(name):
@@ -263,8 +265,7 @@ def thread_function3(name):
 
 
         except:
-            print(traceback.format_exc())
-            print("Ошибка в модуле получения данных. Порт2", e)
+            print(f"Ошибка :{traceback.format_exc()} в модуле получения данных. Порт2")
             logging.error("Ошибка в модуле получения данных. Порт2")
 
 
@@ -662,10 +663,6 @@ except:
     print(input)
     exit()
 
-
-leveld = logging.DEBUG  # INFO
-logging.basicConfig(level=leveld, filename='yakassa.log', format='%(asctime)s %(levelname)s:%(message)s')
-
 # pl = platform.uname()
 white = True
 
@@ -701,7 +698,7 @@ except OSError as e:
     i = input()
     exit()
 
-logging.debug(f"порты подключены")
+logging.debug(f" Порты подключены")
 
 print('Отправка данных о запуске программы....')
 try:
