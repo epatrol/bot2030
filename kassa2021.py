@@ -1,5 +1,6 @@
-ver = "11/01/2021 09:18"
+ver = "11/01/2021 12:12"
 
+import traceback
 from socketserver import ThreadingMixIn
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
@@ -12,6 +13,8 @@ import psutil
 from time import time, localtime, strftime
 from datetime import datetime
 import time
+import platform
+import requests
 
 from kdef2021 import fid
 from kdef2021 import int2bit
@@ -78,6 +81,7 @@ def thread_function1(name):  # из KKT получаем
             if bts != []:
                 pbts = f'data:{bts}'
             print(f"K>{pport}: ", [f'{r}:{kOut1[r]}' for r in ['id', 'cod', 'error']], f'{pbts}')
+            #txtpost += " ".join(f"K>{pport}: " , [f'{r}:{kOut1[r]}' for r in ['id', 'cod', 'error']] , f'{pbts}')
             # print(f"kOut1:{kOut1['data']}\tbts:{bts}")
             s = datetime.strftime(datetime.now(), "%H:%M:%S")
 
@@ -95,9 +99,9 @@ def thread_function1(name):  # из KKT получаем
             elif pport == 4:  # работа с POST
                 # self.wfile.write(bytes(s, "utf-8"))
                 # tpost =(f"K>{pport}: ", [f'{i}:{kOut1[i]}' for i in ['id', 'cod', 'error', 'data']])
-                tpost = f"K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}"  # for i in ['id', 'cod', 'error', 'data']])"
-                txtpost += f"{s} {tpost}\n<BR>"
-                print(f"{byte_to_str(kOut1['id'])} = {last_cod}")
+                #110121 tpost = f"K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}"  # for i in ['id', 'cod', 'error', 'data']])"
+                #110121 txtpost += f"{s} {tpost}\n<BR>"
+                #110121 print(f"{byte_to_str(kOut1['id'])} = {last_cod}")
                 if byte_to_str(kOut1['id']) == last_cod:  # b'31':
                     wait = False
                 # print(f"txtpost:{txtpost}")
@@ -105,9 +109,9 @@ def thread_function1(name):  # из KKT получаем
             elif pport == 5:  # работа с POST
                 # self.wfile.write(bytes(s, "utf-8"))
                 # tpost =(f"K>{pport}: ", [f'{i}:{kOut1[i]}' for i in ['id', 'cod', 'error', 'data']])
-                tpost = f"K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}"  # for i in ['id', 'cod', 'error', 'data']])"
-                txtpost += f"{s} {tpost}\n<BR>"
-                print(f"{byte_to_str(kOut1['id'])} = {last_cod}")
+                #110121tpost = f"K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}"  # for i in ['id', 'cod', 'error', 'data']])"
+                #110121txtpost += f"{s} {tpost}\n<BR>"
+                #110121print(f"{byte_to_str(kOut1['id'])} = {last_cod}")
                 if byte_to_str(kOut1['id']) == last_cod:  # b'31':
                     wait = False
                 # print(f"txtpost:{txtpost}")
@@ -135,7 +139,7 @@ def thread_function1(name):  # из KKT получаем
 
 # Поток получения информация из Порта 1
 def thread_function2(name):
-    global pport
+    global pport, txtpost
 
     while True:
         try:
@@ -149,25 +153,42 @@ def thread_function2(name):
             else:
                 bytes_to_read += portout.read_until(b"\x03")
                 bytes_to_read += portout.read(2)
-                # print(type(bytes_to_read))
-                portin.write(bytes_to_read)
-            pport = 1
-            kIn1 = kIn(bytes_to_read)
 
-            pbts=''
-            bts = byte_to_str(kIn1['data']).split('\x1c')
-            if bts != []:
-                pbts = f'data:{bts}'
-            print(f"1>K: ", [f'{r}:{byte_to_str(kIn1[r])}' for r in ['id', 'cod']], f'{pbts}')
-            if global1:
-                print(f"1>K: {kIn1}")
-                print(bytes_to_read)
+                kIn1 = kIn(bytes_to_read)
+
+                pbts=''
+                bts = byte_to_str(kIn1['data']).split('\x1c')
+
+                # 11/01/21 внести изменения в данные при неправильных
+                # коррекция чека для старых драйверов 1с
+                # начало блока
+                if (len(bts)<5)  and  kIn1['cod']==b'30' and bts[0]=='2':
+                    #пересобрать строку отсылки
+                    bytes_to_read = new_str(byte_to_str(kIn1['id']),byte_to_str(kIn1['cod']),[2,bts[1],bts[2],0,1])
+                    pbts = ''
+                    kIn1 = kIn(bytes_to_read)
+                    bts = byte_to_str(kIn1['data']).split('\x1c')
+                # конец блока
+
+
+
+                portin.write(bytes_to_read)
+                pport = 1
+
+                if bts != [] and bts !=['']:
+                    pbts = f'data:{bts}'
+                print(f"1>K: ", [f'{r}:{byte_to_str(kIn1[r])}' for r in ['id', 'cod']], f'{pbts}')
+                #txtpost+=f"1>K: ", [f'{r}:{byte_to_str(kIn1[r])}' for r in ['id', 'cod']], f'{pbts}'
+                if global1:
+                    print(f"1>K: {kIn1}")
+                    print(bytes_to_read)
         except e:
-            print("Ошибка в функции/ Порт1", e)
+            print("Ошибка в модуле получения данных. Порт1")
+            logging.error("Ошибка в модуле получения данных. Порт1")
 
 # Поток получения информация из Порта 2
 def thread_function3(name):
-    global pport
+    global pport, txtpost
 
     while True:
         try:
@@ -175,29 +196,36 @@ def thread_function3(name):
             if bytes_to_read == b'\x05':  #
                 print("2>Проверка связи")
                 portout2.write(b'\x06')
-            else:
-                if bytes_to_read == b'\x0A':  #
-                    print("2>перевод строки")
-                    portin.write(bytes_to_read)
-                else:
-                    bytes_to_read += portout2.read_until(b"\x03")
-                    bytes_to_read += portout2.read(2)
-                # inKKT.append([bytes_to_read, 2])
+            elif bytes_to_read == b'\x0A':
+                print("2>перевод строки")
                 portin.write(bytes_to_read)
+            else:
+                bytes_to_read += portout2.read_until(b"\x03")
+                bytes_to_read += portout2.read(2)
 
-                pport = 2
                 kIn2 = kIn(bytes_to_read)
-                # print(bytes_to_read)
-                # print(type(bytes_to_read))
-                # print(kIn2)
-                # print(type(kIn2))
-                # print(type(kIn2['id']))
 
                 pbts = ''
                 bts = byte_to_str(kIn2['data']).split('\x1c')
+
+                # 11/01/21 внести изменения в данные при неправильных
+                # коррекция чека для старых драйверов 1с
+                # начало блока
+                if (len(bts)<5)  and  kIn2['cod']==b'30' and bts[0]=='2':
+                    #пересобрать строку отсылки
+                    bytes_to_read = new_str(byte_to_str(kIn2['id']),byte_to_str(kIn2['cod']),[2,bts[1],bts[2],0,1])
+                    pbts = ''
+                    kIn2 = kIn(bytes_to_read)
+                    bts = byte_to_str(kIn2['data']).split('\x1c')
+                # конец блока
+
+                portin.write(bytes_to_read)
+                pport = 2
+
                 if bts != [] and bts !=['']:
                     pbts = f'data:{bts}'
                 print(f"2>K: ", [f'{r}:{byte_to_str(kIn2[r])}' for r in ['id', 'cod']], f'{pbts}')
+                #txtpost+=f"2>K: ", [f'{r}:{byte_to_str(kIn2[r])}' for r in ['id', 'cod']], f'{pbts}'
                 if global1:
                     print(f"2>K: {kIn2}")
                     print(bytes_to_read)
@@ -223,8 +251,10 @@ def thread_function3(name):
 
 
         except:
-            print("Ошибка в модуле получения данных. Порт2")
+            print(traceback.format_exc())
+            print("Ошибка в модуле получения данных. Порт2", e)
             logging.error("Ошибка в модуле получения данных. Порт2")
+
 
 
 # Поток получения информация из Консоли
@@ -301,7 +331,7 @@ def thread_maincourceA(name):  #
             print('Аннулировать документ')
             portin.write(sss)
 
-        elif inp == 'comproxy':  # проверка связи
+        elif inp == 'proxy':  # проверка связи
             service_request = psutil.win_service_get('ComProxy')  # подключение к службе ComProxy
             print(service_request.name(), service_request.status())  # запрос на имя службы и ее статус
             if service_request.status() == 'stopped':  # условие на перезапуск службы
@@ -510,7 +540,7 @@ class Handler(BaseHTTPRequestHandler):
         global last_cod
         global pport
         print("!!!!!!!!!!!!!!!!!")
-        txtpost=''
+        #txtpost=''
         pport = 5
         length = int(self.headers.get('Content-length', 0))
         data = self.rfile.read(length).decode()
@@ -576,7 +606,7 @@ class Handler(BaseHTTPRequestHandler):
         # self.wfile.write("Hello World!")
         now = datetime.now()
         s = datetime.strftime(datetime.now(), "%d.%m.%Y %H:%M:%S <br>\n \r")
-        self.wfile.write(bytes(s, "utf-8"))
+        self.wfile.write(bytes(f"<p>{s}</p>", "utf-8"))
         self.wfile.write(bytes(
             f"<p><br>{txtpost}<br></p><p>Сервер кассовых чеков запущен. <br>Работает. <br>Полёт нормальный!!!<br><br><br> \n \r ",
             "utf-8"))
@@ -603,6 +633,23 @@ txtpost = ""
 pport = 0
 spisok_id = ['id', 'cod', 'data']
 
+try:
+    config = configparser.ConfigParser()
+    config.read('yakassa.ini')
+    COMIN = config['DEFAULT']['COMPROXYKASSA']  # 'COM7' # порт компрокси для кассы
+    COMOUT = config['DEFAULT']['COM1C1']  # 'COM15'  # порт указывается в 1с для подключения кассы
+    COMOUT2 = config['DEFAULT']['COM1C2']  # 'COM7'
+    IP = config['WEB']['IP']  # "0.0.0.0"
+    Port = int(config['WEB']['Port'])  # 1212
+    PersonalName = config['PERSONAL']['Name']  # "0.0.0.0"
+    logging.debug(f" Загружаем конфигурацию ")
+except:
+    print(f"ошибка загрузки ini файла.")
+    logging.debug(f" Загружаем конфигурацию ")
+    print(input)
+    exit()
+
+
 leveld = logging.DEBUG  # INFO
 logging.basicConfig(level=leveld, filename='yakassa.log', format='%(asctime)s %(levelname)s:%(message)s')
 
@@ -615,23 +662,6 @@ print("Информация о ComProxy")
 print(comproxy_path, comproxy_status)
 print('- ' * 15)
 
-logging.debug(f" Загружаем конфигурацию ")
-if True:  # try:
-    config = configparser.ConfigParser()
-    config.read('yakassa.ini')
-    COMIN = config['DEFAULT']['COMPROXYKASSA']  # 'COM7' # порт компрокси для кассы
-    COMOUT = config['DEFAULT']['COM1C1']  # 'COM15'  # порт указывается в 1с для подключения кассы
-    COMOUT2 = config['DEFAULT']['COM1C2']  # 'COM7'
-    # pause_time = float(config['DEFAULT']['Pause'])  #
-    # onOut2 = True
-    # portOn = 0
-# except:
-#    print(f"ошибка загрузки ini файла.")
-#    exit()
-# except:
-#    logging.error(f"ошибка загрузки ini файла.")
-#    exit()
-# p_t = pause_time
 
 inKKT = []
 inSOFT = []
@@ -660,6 +690,21 @@ except OSError as e:
 
 logging.debug(f"порты подключены")
 
+print('Отправка данных о запуске программы....')
+try:
+    pl = platform.uname()
+    data = (f"{pl.system} {pl.node} {pl.version} {pl.machine} - ver{ver}: {COMIN} : {COMOUT} : {COMOUT2} - {PersonalName}")
+    data1 = {"from": "Alex", "to": "Alex2", "mes": data, "flag": "add"}
+    base = "http://www.a-34.ru/MAP/p.php?"
+    r = requests.get(base, params=data1)
+    # print("Отправил в базу...")#r.text)
+    print('...данные отправлены')
+except:
+    logging.error(f"ошибка загрузки на a-34.ru нет интернета, или сайт - офф")
+    print('...ошибка загрузки на a-34.ru нет интернета, или сайт - офф')
+
+
+
 print(f"Программа запущена. Не закрывайте меня. версия {ver}")
 # print(f"Порты для подключения:")
 
@@ -687,8 +732,6 @@ z.start()
 # - ------------------------------------
 
 
-IP = config['WEB']['IP'] #"0.0.0.0"
-Port = int(config['WEB']['Port']) # 1212
 
 
 txtA = ""
