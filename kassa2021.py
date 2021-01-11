@@ -159,6 +159,10 @@ def thread_function2(name):
                 pbts=''
                 bts = byte_to_str(kIn1['data']).split('\x1c')
 
+                print(kIn1)
+                print(bts)
+
+
                 # 11/01/21 внести изменения в данные при неправильных
                 # коррекция чека для старых драйверов 1с
                 # начало блока
@@ -169,22 +173,30 @@ def thread_function2(name):
                     kIn1 = kIn(bytes_to_read)
                     bts = byte_to_str(kIn1['data']).split('\x1c')
                 # конец блока
-
-
+                if (len(bts)>10)  and  kIn1['cod']==b'42':
+                    #пересобрать строку отсылки
+                    bytes_to_read = new_str(kIn1['id'],kIn1['cod'],[bts[0],bts[1],bts[2],bts[3],3,"",1,00,"",0,4,1])
+                    pbts = ''
+                    kIn1 = kIn(bytes_to_read)
+                    bts = byte_to_str(kIn1['data']).split('\x1c')
+                    bts[0] = str(str_to_byte(bts[0]), 'cp866')
+                    print(f"bts:{bts}")
+                # конец блока
 
                 portin.write(bytes_to_read)
                 pport = 1
 
                 if bts != [] and bts !=['']:
                     pbts = f'data:{bts}'
-                print(f"1>K: ", [f'{r}:{byte_to_str(kIn1[r])}' for r in ['id', 'cod']], f'{pbts}')
+                print(f"1>K: ", [f'{r}:{kIn1[r]}' for r in ['id', 'cod']], f'{pbts}')
                 #txtpost+=f"1>K: ", [f'{r}:{byte_to_str(kIn1[r])}' for r in ['id', 'cod']], f'{pbts}'
                 if global1:
                     print(f"1>K: {kIn1}")
                     print(bytes_to_read)
-        except e:
+        except:
             print("Ошибка в модуле получения данных. Порт1")
             logging.error("Ошибка в модуле получения данных. Порт1")
+
 
 # Поток получения информация из Порта 2
 def thread_function3(name):
