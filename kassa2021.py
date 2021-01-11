@@ -1,4 +1,4 @@
-ver = "11/01/2021 12:12"
+ver = "12/01/2021 00:57"
 
 import traceback
 from socketserver import ThreadingMixIn
@@ -225,65 +225,61 @@ def thread_function3(name):
             bytes_to_read = portout2.read(1)  # считываем байт, если
             if bytes_to_read == b'\x05':  #
                 print("2>Проверка связи")
-                portout2.write(b'\x06')
-            elif bytes_to_read == b'\x0A':
+                logging.info(" 2>K: Проверка связи(автоответ)")
+                portout2.write(b'\x06')  # portin.write(bytes_to_read)
+            elif bytes_to_read == b'\x0A':  #
                 print("2>перевод строки")
                 portin.write(bytes_to_read)
             else:
                 bytes_to_read += portout2.read_until(b"\x03")
                 bytes_to_read += portout2.read(2)
-
                 kIn2 = kIn(bytes_to_read)
-
-                pbts = ''
                 bts = byte_to_str(kIn2['data']).split('\x1c')
 
                 # 11/01/21 внести изменения в данные при неправильных
                 # коррекция чека для старых драйверов 1с
-                # начало блока
+                #
                 if (len(bts) < 5) and kIn2['cod'] == b'30' and bts[0] == '2':
                     # пересобрать строку отсылки
                     bytes_to_read = new_str(byte_to_str(kIn2['id']), byte_to_str(kIn2['cod']),
                                             [2, bts[1], bts[2], 0, 1])
-                    pbts = ''
+                    kIn2 = kIn(bytes_to_read)
+                    bts = byte_to_str(kIn2['data']).split('\x1c')
+
+                if (len(bts) < 8 ) and kIn2['cod'] == b'42':
+                    # пересобрать строку отсылки
+                    pr_sposob = 4  # 4 - Полный расчет
+                    pr_ras = ""
+                    tova = str(str_to_byte(bts[0]), 'cp866')
+                    if tova[0:6] == '[Отд1]':
+                        pr_ras = 4  #Платёж
+                    if tova[0:6] == '[Отд2]':
+                        pr_ras = 1  #Товар
+                    if tova[0:6] == '[Отд3]':
+                        pr_ras = 4  #Товар
+
+                    bytes_to_read = new_str(byte_to_str(kIn2['id']), byte_to_str(kIn2['cod']),
+                        [bts[0], bts[1], bts[2], bts[3], 3, bts[5], 1, 0, "", "0.000", pr_sposob,  pr_ras ])
                     kIn2 = kIn(bytes_to_read)
                     bts = byte_to_str(kIn2['data']).split('\x1c')
                 # конец блока
 
+                # перекодировка данных в читаемый текст для вывода и лога
+                bts1 = [str(str_to_byte(btsx), 'cp866') for btsx in bts]
+
                 portin.write(bytes_to_read)
                 pport = 2
 
-                if bts != [] and bts != ['']:
-                    pbts = f'data:{bts}'
-                print(f"2>K: ", [f'{r}:{byte_to_str(kIn2[r])}' for r in ['id', 'cod']], f'{pbts}')
-                # txtpost+=f"2>K: ", [f'{r}:{byte_to_str(kIn2[r])}' for r in ['id', 'cod']], f'{pbts}'
-                if global1:
-                    print(f"2>K: {kIn2}")
-                    print(bytes_to_read)
-
-                    # if kIn2['cod'] in [b'30', b'31', b'40', b'04', b'00', b'01']:
-                    '''
-                    # ---------------
-                    print('auto...')
-                    x02 = '\x02'
-                    x1c = '\x1c'
-                    x03 = '\x03'
-                    id = kIn2['id'].decode(encoding="utf-8", errors="strict")
-                    #sss = f'{x02}A021{x1c}0126019473{x1c}{x03}') kIn2['id']
-                    sss = f'{x02}{id}021{x1c}0126019473{x1c}{x03}'
-                    ssss = add_check_sum(str_to_byte(sss))
-                    print(ssss)
-                    portout2.write(ssss)
-                else:
-                    '''
-                # portin.write(bytes_to_read)
-
-                # ---------------
-
-
+                txtprint = f" 2>K: {[f'{r}:{byte_to_str(kIn2[r])}' for r in ['id', 'cod']]} data: {bts1}"
+                print(txtprint)
+                logging.info(txtprint)
+                logging.debug(f" 2>K: {kIn2}")
+                logging.debug(f" 2>K: bytes_to_read: {bytes_to_read}")
         except:
-            print(f"Ошибка :{traceback.format_exc()} в модуле получения данных. Порт2")
-            logging.error(f"Ошибка {traceback.format_exc()} в модуле получения данных. Порт2")
+            print(f"Порт2 ОШИБКА :{traceback.format_exc()} в модуле получения данных. ")
+            logging.error(f"Порт2 Ошибка {traceback.format_exc()} в модуле получения данных. ")
+
+#  id = kIn2['id'].decode(encoding="utf-8", errors="strict")
 
 
 # Поток получения информация из Консоли
@@ -730,8 +726,9 @@ except:
 print(f"Программа запущена. Не закрывайте меня. версия {ver}")
 # print(f"Порты для подключения:")
 
-
+print('- ' * 15)
 print("help - для вывода списка команд")
+print('- ' * 15)
 
 # PortOnn = {}
 wait = True
