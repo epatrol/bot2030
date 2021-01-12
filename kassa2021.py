@@ -44,6 +44,7 @@ try:
     config.read('kassa2021.ini')
 except:
     print('ОШИБКА ЧТЕНИЯ ini ФАЙЛА! ПРОГРАММА НЕ МОЖЕТ ДАЛЬШЕ РАБОТАТЬ!!!!')
+    print('исправьте ini файл - и запустите заново')
     while True:
         input()
 
@@ -290,223 +291,215 @@ def thread_maincourceA(name):  #
     global bbegin
     global id
     global pport
-    global global1
 
     l = range(33, 126)
     while True:
-        inp = input("")
-        # if inp == 'exit':
-        #    print('exit1')
-        #    sys.exit()
-        #    print('exit2')
-        if inp in ['X', 'x', 'Х', 'х']:  # x - отчёт
-            pport = 3
-            # ll = chr(random.choice(l))
-            # sss = new_str(f"{ll}", '20', rus('ФИО Кассира'))
-            sss = new_str(fid(), '20', rus('ФИО Кассира'))
-            # print(sss)
-            # print(f"{sss}")
-            print('X-Отчёт')
-            portin.write(sss)
-        elif inp in ['help', 'h', 'H', 'HELP', 'Help', 'р', '?']:  # z - отчёт
-            print(txthelp)
-        elif inp in ['Z', 'z', 'Я', 'я']:  # z - отчёт
-            pport = 3
-            # ll = chr(random.choice(l))
-            sss = new_str(fid(), '21', rus('ФИО Кассира'))
-            # print(sss)
-            # print(f"{sss}")
-            print('Z-Отчёт')
-            portin.write(sss)
-
-        elif inp in ['restart', 're', 'reboot']:  # restart
-            pport = 3
-            # ll = chr(random.choice(l))
-            sss = new_str(fid(), '9C', "")
-            print(sss)
-            # print(f"{sss}")
-            print('Рестарт ККТ')
-            portin.write(sss)
-
-
-        elif inp in ['00']:  # z - состояние кассы
-            pport = 3
-            # ll = chr(random.choice(l))
-            sss = new_str(fid(), '00', '0')
-            print('3>K:Состояние [00]')
-            portin.write(sss)
-            pport = 3
-            # ll = chr(random.choice(l))
-            sss = new_str(fid(), '02', '2')
-            print('3>K:Прошивка [2.2]')
-            portin.write(sss)
-            pport = 3
-            # ll = chr(random.choice(l))
-            sss = new_str(fid(), '04', '')
-            print('3>K:Принтер [4]')
-            portin.write(sss)
-
-
-        elif inp in ['out']:  # 32. Аннулировать документ
-            pport = 3
-            # ll = chr(random.choice(l))
-            sss = new_str(fid(), '32', '')
-            # print(sss)
-            # print(f"{sss}")
-            print('Аннулировать документ')
-            portin.write(sss)
-
-        elif inp == 'proxy':  # проверка связи
-            service_request = psutil.win_service_get('ComProxy')  # подключение к службе ComProxy
-            print(service_request.name(), service_request.status())  # запрос на имя службы и ее статус
-            if service_request.status() == 'stopped':  # условие на перезапуск службы
-                subprocess.call('net start ComProxy')
-                print('service ... запускаем')
-            else:
-                print('service работает')
-
-        elif inp == '1':  # проверка связи
-            portin.write(b'\x05')
-
-        elif inp in ['begin', 'open', 'открыть']:  # открытие смены
-            print('Открыть смену')
-            pport = 3
-            timeb = strftime("%H%M%S", time.localtime())
-            dateb = strftime("%d%m%y", time.localtime())
-
-            # ll = chr(random.choice(l))
-            # ll = 'R'
-            com = "10"
-            param = {timeb, dateb}
-            sss = new_str(fid(), com, param)
-            # print(sss)
-            print(f"3>K:УcтановкаВремени[10]:{sss}")
-
-            portin.write(sss)
-
-            pport = 3
-            # ll = chr(random.choice(l))
-            # ll = 'O'
-            com = "23"
-            param = {rus("ФИО Кассира")}
-            sss = new_str(fid(), com, param)
-            # print(sss)
-            print(f"3>K:ОткрытьСмену[23]{sss}")
-            portin.write(sss)
-
-        elif inp == 'is_open':
-            print("Проверка состояния портов:")
-            print(f"PORTIN   {portin.is_open}")
-            print(f"PORTOUT  {portout.is_open}")
-            print(f"PORTOUT2 {portout2.is_open}")
-
-        elif inp == 'reopen':
-            print("Переоткрытие портов")
-            # global COMIN
-            # portin.port = COMIN
-            # = serial.Serial(port=COMIN, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
-            #                       bytesize=serial.EIGHTBITS)
-            # print(f"COMOUT : {COMOUT}")
-            # portout = serial.Serial(port=COMOUT, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
-            #                        bytesize=serial.EIGHTBITS)
-            # print(f"COMOUT2: {COMOUT2}")
-            # portout2 = serial.Serial(port=COMOUT2, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
-            #                        bytesize=serial.EIGHTBITS)
-
-            # print(f"PORTIN   {portin.open()}")
-            # print(f"PORTOUT  {portout.open()}")
-            # print(f"PORTOUT2 {portout2.open()}")
-
-
-
-        elif inp == '911':
-            pport = 3
-            com = input("Консольный режим работы с кассой \nВведите команду : ")
-            # проверка на список доступных команд, если нет в списке - исключение
-            try:
-                print(f"{com} # {command[com]}")
-                print("Введите параметры, окончание - пустой параметр (Enter)")
-                param = []
-                p = '1'
-                i = 0
-                while p != '':
-                    p = input(f"Параметр {i}: ")
-                    i += 1
-                    if p != '':
-                        param.append(rus(p))
-                if input("Введите 1 для отправки ") == '1':
-                    # ll = chr(random.choice(l))
-                    # ll='R'
-                    sss = new_str(fid(), com, param)  # f"{ll}"
-                    print(sss)
-                    print(f"{sss}")
-                    portin.write(sss)
-                else:
-                    print("Отмена отправки")
-            except:
-                print('#! НЕДОПУСТИМАЯ КОМАНДА')
-        elif inp == '900':
-            pport = 3
-            print("Консольный режим работы с кассой \nКоманда + параметры через пробел \n "
-                  "Отправить - последняя строка end")
-            com900 = input()
-
-            while com900 != 'end':
-                print(f'com900={com900}')
-                if '|' in com900:
-                    com101, com901 = com900.split('|', 1)
-                    param = rus(com901).split('|')
-                else:
-                    com101 = com900
-                    param = []
-                # проверка на список доступных команд, если нет в списке - исключение
-                print(f"{com101} # {command[com101]}")
-                sss = new_str(fid(), com101, param)  # f"{ll}"
+        try:
+            inp = input("")
+            # if inp == 'exit':
+            #    print('exit1')
+            #    sys.exit()
+            #    print('exit2')
+            if inp in ['X', 'x', 'Х', 'х']:  # x - отчёт
+                pport = 3
+                # ll = chr(random.choice(l))
+                # sss = new_str(f"{ll}", '20', rus('ФИО Кассира'))
+                sss = new_str(fid(), '20', rus('ФИО Кассира'))
+                # print(sss)
+                # print(f"{sss}")
+                print('X-Отчёт')
                 portin.write(sss)
-                # time.sleep(0.5)
+            elif inp in ['help', 'h', 'H', 'HELP', 'Help', 'р', '?']:  # z - отчёт
+                print(txthelp)
+            elif inp in ['Z', 'z', 'Я', 'я']:  # z - отчёт
+                pport = 3
+                # ll = chr(random.choice(l))
+                sss = new_str(fid(), '21', rus('ФИО Кассира'))
+                # print(sss)
+                # print(f"{sss}")
+                print('Z-Отчёт')
+                portin.write(sss)
+
+            elif inp in ['restart', 're', 'reboot']:  # restart
+                pport = 3
+                # ll = chr(random.choice(l))
+                sss = new_str(fid(), '9C', "")
+                print(sss)
+                # print(f"{sss}")
+                print('Рестарт ККТ')
+                portin.write(sss)
+
+
+            elif inp in ['00']:  # z - состояние кассы
+                pport = 3
+                # ll = chr(random.choice(l))
+                sss = new_str(fid(), '00', '0')
+                print('3>K:Состояние [00]')
+                portin.write(sss)
+                pport = 3
+                # ll = chr(random.choice(l))
+                sss = new_str(fid(), '02', '2')
+                print('3>K:Прошивка [2.2]')
+                portin.write(sss)
+                pport = 3
+                # ll = chr(random.choice(l))
+                sss = new_str(fid(), '04', '')
+                print('3>K:Принтер [4]')
+                portin.write(sss)
+
+
+            elif inp in ['out']:  # 32. Аннулировать документ
+                pport = 3
+                # ll = chr(random.choice(l))
+                sss = new_str(fid(), '32', '')
+                # print(sss)
+                # print(f"{sss}")
+                print('Аннулировать документ')
+                portin.write(sss)
+
+            elif inp == 'proxy':  # проверка связи
+                service_request = psutil.win_service_get('ComProxy')  # подключение к службе ComProxy
+                print(service_request.name(), service_request.status())  # запрос на имя службы и ее статус
+                if service_request.status() == 'stopped':  # условие на перезапуск службы
+                    subprocess.call('net start ComProxy')
+                    print('service ... запускаем')
+                else:
+                    print('service работает')
+
+            elif inp == '1':  # проверка связи
+                portin.write(b'\x05')
+
+            elif inp in ['begin']:  # начало работы
+                print('Начало работы')
+                pport = 3
+                timeb = strftime("%H%M%S", time.localtime())
+                dateb = strftime("%d%m%y", time.localtime())
+
+                # ll = chr(random.choice(l))
+                # ll = 'R'
+                com = "10"
+                param = {dateb, timeb}
+                sss = new_str(fid(), com, param)
+                # print(sss)
+                #print(f"3>K:УcтановкаВремени[10]:{sss}")
+
+                portin.write(sss)
+
+
+
+            elif inp in ['open', 'открыть']:  # открытие смены
+                print('Открыть смену')
+                pport = 3
+                timeb = strftime("%H%M%S", time.localtime())
+                dateb = strftime("%d%m%y", time.localtime())
+
+                # ll = chr(random.choice(l))
+                # ll = 'R'
+                com = "10"
+                param = {dateb, timeb}
+                sss = new_str(fid(), com, param)
+                # print(sss)
+                print(f"3>K:УcтановкаВремени[10]:{sss}")
+
+                portin.write(sss)
+
+                pport = 3
+                # ll = chr(random.choice(l))
+                # ll = 'O'
+                com = "23"
+                param = {rus("ФИО Кассира")}
+                sss = new_str(fid(), com, param)
+                # print(sss)
+                print(f"3>K:ОткрытьСмену[23]{sss}")
+                portin.write(sss)
+
+            elif inp == 'is_open':
+                print("Проверка состояния портов:")
+                print(f"PORTIN   {portin.is_open}")
+                print(f"PORTOUT  {portout.is_open}")
+                print(f"PORTOUT2 {portout2.is_open}")
+
+            elif inp == 'reopen':
+                print("Переоткрытие портов")
+                # global COMIN
+                # portin.port = COMIN
+                # = serial.Serial(port=COMIN, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
+                #                       bytesize=serial.EIGHTBITS)
+                # print(f"COMOUT : {COMOUT}")
+                # portout = serial.Serial(port=COMOUT, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
+                #                        bytesize=serial.EIGHTBITS)
+                # print(f"COMOUT2: {COMOUT2}")
+                # portout2 = serial.Serial(port=COMOUT2, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
+                #                        bytesize=serial.EIGHTBITS)
+
+                # print(f"PORTIN   {portin.open()}")
+                # print(f"PORTOUT  {portout.open()}")
+                # print(f"PORTOUT2 {portout2.open()}")
+
+
+
+            elif inp == '911':
+                pport = 3
+                com = input("Консольный режим работы с кассой \nВведите команду : ")
+                # проверка на список доступных команд, если нет в списке - исключение
+                try:
+                    print(f"{com} # {command[com]}")
+                    print("Введите параметры, окончание - пустой параметр (Enter)")
+                    param = []
+                    p = '1'
+                    i = 0
+                    while p != '':
+                        p = input(f"Параметр {i}: ")
+                        i += 1
+                        if p != '':
+                            param.append(rus(p))
+                    if input("Введите 1 для отправки ") == '1':
+                        # ll = chr(random.choice(l))
+                        # ll='R'
+                        sss = new_str(fid(), com, param)  # f"{ll}"
+                        print(sss)
+                        print(f"{sss}")
+                        portin.write(sss)
+                    else:
+                        print("Отмена отправки")
+                except:
+                    print('#! НЕДОПУСТИМАЯ КОМАНДА')
+                    logging.error(f"#! НЕДОПУСТИМАЯ КОМАНДА: {traceback.format_exc()}")
+
+
+            elif inp == '900':
+
+                pport = 3
+                print("Консольный режим работы с кассой \nКоманда + параметры через пробел \n "
+                      "Отправить - последняя строка end")
                 com900 = input()
-        #            except:
-        #                    print(f'{com101} #! НЕДОПУСТИМАЯ КОМАНДА')
 
-        elif inp == '922':
-            pport = 3
-            d = input("Отправка на кассу строки (без контрольной суммы) : ")
-            # sss1=sss.encode()
-            print(d)
+                while com900 != 'end':
+                    print(f'com900={com900}')
+                    if '|' in com900:
+                        com101, com901 = com900.split('|', 1)
+                        param = rus(com901).split('|')
+                    else:
+                        com101 = com900
+                        param = []
+                    # проверка на список доступных команд, если нет в списке - исключение
+                    print(f"{com101} # {command[com101]}")
+                    sss = new_str(fid(), com101, param)  # f"{ll}"
+                    portin.write(sss)
+                    # time.sleep(0.5)
+                    com900 = input()
+            #            except:
+            #                    print(f'{com101} #! НЕДОПУСТИМАЯ КОМАНДА')
 
-            # input
-            # \x02PIRIR022\x1c\x03    7F
-            # output
-            # A0210126019473
-            i = 0
-            sss = ''
-            while i < d.__len__():
-                s = d[i]
-                if s == '\\':
-                    s = chr(int(f"{d[i + 2]}{d[i + 3]}", 16))
-                    i = i + 3
-                i += 1
-                print(s, ord(s))
-                sss += s
-            print('sss', sss)
-            # --------------------------
-            eee = (add_check_sum((str_to_byte(sss))))
-            # eee = str_to_byte(sss)
-            print(eee)
-            portin.write(eee)
-            print("отправили команду: ")
+            elif inp == '922':
+                pport = 3
+                d = input("Отправка на кассу строки (без контрольной суммы) : ")
+                # sss1=sss.encode()
+                print(d)
 
-        elif inp == '888':
-            with open('spam.bmp', 'rb') as f:
-                data = bytearray(f.read())
-            portin.write(data)
-
-        elif inp == '999':
-            pport = 3
-            print("Режим пакетного ввода команд, для окончания введите 1")
-            d = input()
-            # d = rus(d)
-            while d != '1':
+                # input
+                # \x02PIRIR022\x1c\x03    7F
+                # output
                 # A0210126019473
                 i = 0
                 sss = ''
@@ -525,10 +518,60 @@ def thread_maincourceA(name):  #
                 print(eee)
                 portin.write(eee)
                 print("отправили команду: ")
-                d = input()
 
-        elif inp == 'global1':  # вывод информации
-            global1 = True
+            elif inp == '888':
+                with open('c:/2020/kassa/spam.bmp', 'rb') as f:
+                    data = bytearray(f.read())
+                #print(data)
+                print(len(data))
+                sss = new_str(fid(), '15', ['3374'])  # f"{ll}"
+                portin.write(sss)
+                input()
+                portin.write(chr(27).encode('utf-8'))
+                portin.write(data)
+
+            elif inp == '889':
+                with open('c:/work/hello.bmp', 'rb') as f:
+                    data = bytearray(f.read())
+                #print(data)
+                print(len(data))
+                sss = new_str(fid(), '55', [123,469,0])  # f"{ll}"
+                portin.write(sss)
+                time.sleep(0.2)
+                #portin.write(chr(27).encode('utf-8'))
+                portin.write(data)
+
+            elif inp == '999':
+                pport = 3
+                print("Режим пакетного ввода команд, для окончания введите 1")
+                d = input()
+                # d = rus(d)
+                while d != '1':
+                    # A0210126019473
+                    i = 0
+                    sss = ''
+                    while i < d.__len__():
+                        s = d[i]
+                        if s == '\\':
+                            s = chr(int(f"{d[i + 2]}{d[i + 3]}", 16))
+                            i = i + 3
+                        i += 1
+                        print(s, ord(s))
+                        sss += s
+                    print('sss', sss)
+                    # --------------------------
+                    eee = (add_check_sum((str_to_byte(sss))))
+                    # eee = str_to_byte(sss)
+                    print(eee)
+                    portin.write(eee)
+                    print("отправили команду: ")
+                    d = input()
+
+        except:
+            print(f"Ошибка в блоке {traceback.format_exc()} ")
+            logging.error(f"Ошибка в блоке {traceback.format_exc()} ")
+
+
 
 
 def kkm_txt(a):
@@ -668,8 +711,8 @@ try:
     PersonalName = config['PERSONAL']['Name']  # "0.0.0.0"
     logging.info(f" Загружаем конфигурацию ")
 except:
-    print(f"ошибка загрузки ini файла.")
-    logging.info(f" Загружаем конфигурацию ")
+    print(f"ошибка данных ini файла.")
+    logging.error(f"Ошибка данных ini файла {traceback.format_exc()}")
     print(input)
     exit()
 
@@ -688,7 +731,6 @@ inSOFT2 = []
 bbegin = False
 fid.id = chr(65)
 pport = 0
-global1 = False
 last_cos = ""
 
 try:
@@ -826,3 +868,60 @@ for proc in psutil.process_iter(['pid', 'name', 'username']):
 # print(strftime("%d%m%y %H%M%S", localtime()))
 # print(strftime("%d%m%y", time.localtime()))
 # print(strftime("%H%M%S", time.localtime()))
+
+'''
+900
+32||
+30|1|
+40|Тестовый текст|1
+40|Тестовый текст|0
+41|0|5|0|8|t=20200203T1604&s=1.00&fn=9287440300026894&i=34014&fp=2972911564&n=1|
+40|Тестовый текст|1
+40|Тестовый текст|0
+32|
+end
+
+
+900 - все данные
+01|1
+01|2
+01|3
+01|4
+01|5
+01|6
+01|7
+01|8
+01|9
+01|10
+01|11
+01|12
+01|15
+01|16
+01|17
+01|18
+02|1
+02|2
+02|3
+02|4
+02|5
+02|6
+02|7
+02|8
+02|9
+02|10
+02|11
+02|12
+02|13
+02|14
+02|15
+02|16
+02|17
+02|18
+02|19
+02|20
+02|21
+02|22
+02|23
+end
+
+'''
