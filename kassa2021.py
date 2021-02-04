@@ -1,5 +1,5 @@
 # coding: cp1251
-ver = "29/01/2021 09:00"
+ver = "04/02/2021 09:00"
 
 import traceback
 from socketserver import ThreadingMixIn
@@ -13,7 +13,6 @@ import subprocess
 import psutil
 from time import time, localtime, strftime
 from datetime import datetime
-import time
 import platform
 import requests
 
@@ -33,16 +32,10 @@ from kdef2021 import cod04
 from kdef2021 import txthelp
 import socket
 from threading import Thread
-import time
-
+import sys
 
 from command import command
 
-# requests.post('http://localhost:1212',data='{  "BillType": 2,  "BillOtdel": "",  "BillKassir": "Иванов",  "BillNumDoc": "",  "BillTax": "3",  "BarCodeHeader": {  "BarcodeType": "PDF417",  "Barcode": "www.pavlyukevich.ru"  },  "CheckStrings": [  {  "Name": "Сотовый телефон Nokia 3310",  "Art": 1,  "Quantity": 1,  "Price": 0.10,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  },  {  "Name": "Сотовый телефон Nokia 3410",  "Art": 1,  "Quantity": 1,  "Price": 0.50,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  }  ],  "Cash": 0.60,  "PayByCard": 0,  "PayByCredit": 0,  "PayByCertificate": 0,  "ClientTel": "",  "BarCodeFooter": {  "BarcodeType": "CODEQR",  "Barcode": "www.pavlyukevich.ru"  } }'.encode('utf-8'))
-
-# a = '{  "BillType": 666, "El":[{"Command" : "30" , "Arg" : [49,1,"Popov",100,4]},{"Command" : "40" , "Arg" : ["Проверка текста.Малый текст.0123456789[43]1234",0]},{"Command" : "40" , "Arg" : ["Широкий>>>>>>>>>[20]>",32]},{"Command" : "40" , "Arg" : ["ВЫСОКИЙ ШРИФТ4567890123456789012345678[42]3",16]},{"Command" : "40" , "Arg" : ["подчеркнуть",128]},{"Command" : "41" , "Arg" : [0,5,0,8,"t=20200203T1604&s=1.00&fn=9287440300026894&i=34014&fp=2972911564&n=1"]},{"Command" : "32" , "Arg" : [0,"a@a-34.ru"]}    ]}'
-# requests.post('http://localhost:1212',data=a.encode('utf-8'))
-import sys
 
 try:
     config = configparser.ConfigParser()
@@ -54,22 +47,14 @@ except:
         input()
 
 
-COMIN = config['DEFAULT']['COMPROXYKASSA']  # 'COM7' # порт компрокси для кассы
-ipport = int(config['SERVER']['IPPORT']) # PORTA = "3333"
-ip = config['SERVER']['IPSERVER'] # '10.10.8.190'
-flagserver = config['SERVER']['SERVERCLIENT'] # 'server'
-
-sock = ''
-max = 20
-client = []
-gport={}
-
 #---- блок IP SOCK --------------
 # отправка данных на кассу или в IP
 def pportinwrite(s):
+    global portin
     if 'server' in flagserver:
         print(type(s))
-        portin.write(str_to_byte(s))
+        #portin.write(str_to_byte(s))
+        portin.write(s)
     elif flagserver == 'client':
         sock.send(s)
     else:
@@ -138,7 +123,7 @@ def serverwait():
         thread10 = Thread(target=f, args=(nn, conn, addr,))
         thread10.start()
 
-# получение данных клиентом
+# получение данных клиентом для CLIENT
 def connectClient():
     global sock
     try:
@@ -148,7 +133,7 @@ def connectClient():
             data = sock.recv(1024)
             print(data)
             # определить заказчика, пока отсылаем в 1 порт !!!!!
-            portout.write(data)
+            portout1.write(data)
 
             data = data.decode()
             print(f"> {data}")
@@ -160,37 +145,9 @@ def connectClient():
         connectClient()
 
 
-if 'server' in flagserver:
-    print("Запускаем сервер ip")
-    thread7 = Thread(target=serverwait, args=())
-    thread7.start()
-if flagserver == 'client':
-    thread8 = Thread(target=connectClient, args=())
-    thread8.start()
-#--------------------------------------------------------
-
-
-
-
-leveld = int(config['LOG']['Logging'])  # logging.DEBUG
-logging.basicConfig(level=leveld, filename='kassa2021.log', format='%(asctime)s %(levelname)s:%(message)s')
-
-STX = '\x02'  # 0x02
-ETX = '\x03'  # 0x03
-PASS = 'PIRI'
-ENQ = '\x05'  # 0x03
-ACK = '\x06'  # 0x03
-FS = '\x1c'  # 0x1C
-LF = '\x0A'  # 0x0A перемотка бумаги
-lastfid = 0
-
-
 # Поток получения информации из ККТ
-def thread_function1(name):  # из KKT получаем
-    global pport
-    global txtpost
-    global wait
-    global last_cod
+def thread_fromKKT(name):  # из KKT получаем
+    global pport,txtpost,wait, last_cod
 
     print('Проверка связи с кассой...')
     while True:
@@ -227,7 +184,7 @@ def thread_function1(name):  # из KKT получаем
             s = datetime.strftime(datetime.now(), "%H:%M:%S")
 
             if pport == 1:
-                portout.write(bytes_to_read)
+                portout1.write(bytes_to_read)
             elif pport == 2:
                 portout2.write(bytes_to_read)
             elif pport == 3:  # работа с кассой из консоли
@@ -259,13 +216,10 @@ def thread_function1(name):  # из KKT получаем
             elif pport == 7:  # работа с POST
                 gp = gport.pop(f"{byte_to_str(kOut1['id'])}{byte_to_str(kOut1['cod'])}", None)  # 270121
                 serverclient(gp, bytes_to_read)
-
             else:
                 print("ERROR PORT!!!!")
                 logging.error("ERROR PORT!!!!")
-
             '''
-
             if kOut1['cod'] == b'00':
                 cod00(bts)
             if kOut1['cod'] == b'02':
@@ -282,22 +236,22 @@ def thread_function1(name):  # из KKT получаем
 #
 # Поток получения информация из Порта 1
 #
-def thread_function2(name):
-    global pport, txtpost,gport
+def thread_com1(name):
+    global pport, txtpost, gport
 
     while True:
         try:
-            bytes_to_read = portout.read(1)  # считываем байт, если
+            bytes_to_read = portout1.read(1)  # считываем байт, если
             if bytes_to_read == b'\x05':  #
                 print("1>Проверка связи")
                 logging.info(" 1>K: Проверка связи(автоответ)")
-                portout.write(b'\x06')  # portin.write(bytes_to_read)
+                portout1.write(b'\x06')  # portin.write(bytes_to_read)
             elif bytes_to_read == b'\x0A':  #
                 print("1>перевод строки")
                 portin.write(bytes_to_read)
             else:
-                bytes_to_read += portout.read_until(b"\x03")
-                bytes_to_read += portout.read(2)
+                bytes_to_read += portout1.read_until(b"\x03")
+                bytes_to_read += portout1.read(2)
                 kIn1 = kIn(bytes_to_read)
                 bts = byte_to_str(kIn1['data']).split('\x1c')
 
@@ -342,15 +296,13 @@ def thread_function2(name):
                 logging.debug(f" 1>K: {kIn1}")
                 logging.debug(f" 1>K: bytes_to_read: {bytes_to_read}")
 
-
-
         except:
             print(f"Порт1 ОШИБКА :{traceback.format_exc()} в модуле получения данных. ")
             logging.error(f"Порт1 Ошибка {traceback.format_exc()} в модуле получения данных. ")
 
 
 # Поток получения информация из Порта 2
-def thread_function3(name):
+def thread_com2(name):
     global pport, txtpost
 
     while True:
@@ -479,7 +431,6 @@ def thread_maincourceA(name):  #
                 print('3>K:Принтер [4]')
                 portin.write(sss)
 
-
             elif inp in ['out']:  # 32. Аннулировать документ
                 pport = 3
                 # ll = chr(random.choice(l))
@@ -514,7 +465,6 @@ def thread_maincourceA(name):  #
                 sss = new_str(fid(), com, param)
                 # print(sss)
                 #print(f"3>K:УcтановкаВремени[10]:{sss}")
-
                 portin.write(sss)
 
 
@@ -548,7 +498,7 @@ def thread_maincourceA(name):  #
             elif inp == 'is_open':
                 print("Проверка состояния портов:")
                 print(f"PORTIN   {portin.is_open}")
-                print(f"PORTOUT  {portout.is_open}")
+                print(f"PORTOUT1  {portout1.is_open}")
                 print(f"PORTOUT2 {portout2.is_open}")
 
             elif inp == 'reopen':
@@ -829,6 +779,46 @@ def serve_on_port(sip, sport):
 
 
 # - ------------------------------------
+#
+#       Г Л А В Н Ы Й    Б Л О К
+#
+#
+#
+#
+# - ------------------------------------
+COMIN = config['DEFAULT']['COMPROXYKASSA']  # 'COM7' # порт компрокси для кассы
+ipport = int(config['SERVER']['IPPORT']) # PORTA = "3333"
+ip = config['SERVER']['IPSERVER'] # '10.10.8.190'
+flagserver = config['SERVER']['SERVERCLIENT'] # 'server'
+
+sock = ''
+max = 20
+client = []
+gport={}
+
+leveld = int(config['LOG']['Logging'])  # logging.DEBUG
+logging.basicConfig(level=leveld, filename='kassa2021.log', format='%(asctime)s %(levelname)s:%(message)s')
+
+STX = '\x02'  # 0x02
+ETX = '\x03'  # 0x03
+PASS = 'PIRI'
+ENQ = '\x05'  # 0x03
+ACK = '\x06'  # 0x03
+FS = '\x1c'  # 0x1C
+LF = '\x0A'  # 0x0A перемотка бумаги
+lastfid = 0
+
+# -- запуск IP сервера ---
+if 'server' in flagserver:
+    print("Запускаем сервер ip")
+    thread7 = Thread(target=serverwait, args=())
+    thread7.start()
+if flagserver == 'client':
+    thread8 = Thread(target=connectClient, args=())
+    thread8.start()
+#--------------------------------------------------------
+
+
 
 txtpost = ""
 pport = 0
@@ -836,10 +826,10 @@ spisok_id = ['id', 'cod', 'data']
 
 try:
     COMIN = config['DEFAULT']['COMPROXYKASSA']  # 'COM7' # порт компрокси для кассы
-    COMOUT = config['DEFAULT']['COM1C1']  # 'COM15'  # порт указывается в 1с для подключения кассы
+    COMOUT1 = config['DEFAULT']['COM1C1']  # 'COM15'  # порт указывается в 1с для подключения кассы
     COMOUT2 = config['DEFAULT']['COM1C2']  # 'COM7'
-    IP = config['WEB']['IP']  # "0.0.0.0"
-    Port = int(config['WEB']['Port'])  # 1212
+    webIP = config['WEB']['IP']  # "0.0.0.0"
+    webPort = int(config['WEB']['Port'])  # 1212
     PersonalName = config['PERSONAL']['Name']  # "0.0.0.0"
     logging.info(f" Загружаем конфигурацию ")
 except:
@@ -849,13 +839,16 @@ except:
     exit()
 
 # pl = platform.uname()
-white = True
 
+#white = True
+
+#-- информация о Компрокси
 comproxy_path = psutil.win_service_get('ComProxy').as_dict()['binpath']
 comproxy_status = psutil.win_service_get('ComProxy').as_dict()['status']
 print("Информация о ComProxy")
 print(comproxy_path, comproxy_status)
 print('- ' * 15)
+#--
 
 inKKT = []
 inSOFT = []
@@ -871,8 +864,8 @@ try:
         portin = serial.Serial(port=COMIN, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
                                bytesize=serial.EIGHTBITS)
     if 'client' in flagserver:
-        print(f"COMOUT : {COMOUT}")
-        portout = serial.Serial(port=COMOUT, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
+        print(f"COMOUT1 : {COMOUT1}")
+        portout1 = serial.Serial(port=COMOUT1, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
                                 bytesize=serial.EIGHTBITS)
         print(f"COMOUT2: {COMOUT2}")
         portout2 = serial.Serial(port=COMOUT2, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
@@ -885,6 +878,7 @@ except OSError as e:
 
 logging.info(f" Порты подключены")
 
+#-----------------------------
 print('Отправка данных о запуске программы....')
 try:
     pl = platform.uname()
@@ -893,11 +887,11 @@ try:
     data1 = {"from": "Alex", "to": "Alex2", "mes": data, "flag": "add"}
     base = "http://www.a-34.ru/MAP/p.php?"
     r = requests.get(base, params=data1)
-    # print("Отправил в базу...")#r.text)
     print('...данные отправлены')
 except:
     logging.error(f"ошибка загрузки на a-34.ru нет интернета, или сайт - офф")
     print('...ошибка загрузки на a-34.ru нет интернета, или сайт - офф')
+#-----------------------------
 
 print(f"Программа запущена. Не закрывайте меня. версия {ver}")
 # print(f"Порты для подключения:")
@@ -907,14 +901,14 @@ print("help - для вывода списка команд")
 print('- ' * 15)
 
 if 'server' in flagserver:
-    x = threading.Thread(target=thread_function1, args=(1,))
+    x = threading.Thread(target=thread_fromKKT, args=(1,))
     x.start()
 if 'client' in flagserver:
-    y = threading.Thread(target=thread_function2, args=(1,))
+    y = threading.Thread(target=thread_com1, args=(1,))
     y.start()
-    z = threading.Thread(target=thread_function3, args=(1,))
-    #portin.write(b'\x05')
+    z = threading.Thread(target=thread_com2, args=(1,))
     z.start()
+    #portin.write(b'\x05')
 
 # - ------------------------------------
 
@@ -922,8 +916,8 @@ if 'client' in flagserver:
 txtA = ""
 maincource = threading.Thread(target=thread_maincourceA, args=(1,))
 maincource.start()
-print(f"запуск сервера: http://{IP}:{Port}")
-serve_on_port(IP, Port)
+print(f"запуск сервера: http://{webIP}:{webPort}")
+serve_on_port(webIP, webPort)
 
 b = '{  "BillType": 666, ' \
     '"El":' \
@@ -1053,3 +1047,10 @@ end
 end
 
 '''
+
+
+# requests.post('http://localhost:1212',data='{  "BillType": 2,  "BillOtdel": "",  "BillKassir": "Иванов",  "BillNumDoc": "",  "BillTax": "3",  "BarCodeHeader": {  "BarcodeType": "PDF417",  "Barcode": "www.pavlyukevich.ru"  },  "CheckStrings": [  {  "Name": "Сотовый телефон Nokia 3310",  "Art": 1,  "Quantity": 1,  "Price": 0.10,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  },  {  "Name": "Сотовый телефон Nokia 3410",  "Art": 1,  "Quantity": 1,  "Price": 0.50,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  }  ],  "Cash": 0.60,  "PayByCard": 0,  "PayByCredit": 0,  "PayByCertificate": 0,  "ClientTel": "",  "BarCodeFooter": {  "BarcodeType": "CODEQR",  "Barcode": "www.pavlyukevich.ru"  } }'.encode('utf-8'))
+
+# a = '{  "BillType": 666, "El":[{"Command" : "30" , "Arg" : [49,1,"Popov",100,4]},{"Command" : "40" , "Arg" : ["Проверка текста.Малый текст.0123456789[43]1234",0]},{"Command" : "40" , "Arg" : ["Широкий>>>>>>>>>[20]>",32]},{"Command" : "40" , "Arg" : ["ВЫСОКИЙ ШРИФТ4567890123456789012345678[42]3",16]},{"Command" : "40" , "Arg" : ["подчеркнуть",128]},{"Command" : "41" , "Arg" : [0,5,0,8,"t=20200203T1604&s=1.00&fn=9287440300026894&i=34014&fp=2972911564&n=1"]},{"Command" : "32" , "Arg" : [0,"a@a-34.ru"]}    ]}'
+# requests.post('http://localhost:1212',data=a.encode('utf-8'))
+
