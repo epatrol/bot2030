@@ -161,3 +161,11 @@ end
 32
 end
 '''
+
+
+'''
+Новое подключение n:1 conn:<socket.socket fd=444, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('10.10.8.190', 3333), raddr=('10.10.8.190', 31940)> addr:('10.10.8.190', 31940)
+('10.10.8.190', 31940)- PIRIB0043= b'\x02PIRIB00\x0343'
+('10.10.8.190', 31940)- PIRIC0226E= b'\x02PIRIC022\x1c\x036E'
+('10.10.8.190', 31940)- PIRID91365532164= b'\x02PIRID913\x1c65532\x1c1\x1c\x0364'
+'''

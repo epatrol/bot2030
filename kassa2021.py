@@ -1,4 +1,5 @@
-ver = "27/01/2021 19:25"
+# coding: cp1251
+ver = "29/01/2021 09:00"
 
 import traceback
 from socketserver import ThreadingMixIn
@@ -30,12 +31,16 @@ from kdef2021 import cod00
 from kdef2021 import cod02
 from kdef2021 import cod04
 from kdef2021 import txthelp
+import socket
+from threading import Thread
+import time
+
 
 from command import command
 
-# requests.post('http://localhost:1212',data='{  "BillType": 2,  "BillOtdel": "",  "BillKassir": "РРІР°РЅРѕРІ",  "BillNumDoc": "",  "BillTax": "3",  "BarCodeHeader": {  "BarcodeType": "PDF417",  "Barcode": "www.pavlyukevich.ru"  },  "CheckStrings": [  {  "Name": "РЎРѕС‚РѕРІС‹Р№ С‚РµР»РµС„РѕРЅ Nokia 3310",  "Art": 1,  "Quantity": 1,  "Price": 0.10,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  },  {  "Name": "РЎРѕС‚РѕРІС‹Р№ С‚РµР»РµС„РѕРЅ Nokia 3410",  "Art": 1,  "Quantity": 1,  "Price": 0.50,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  }  ],  "Cash": 0.60,  "PayByCard": 0,  "PayByCredit": 0,  "PayByCertificate": 0,  "ClientTel": "",  "BarCodeFooter": {  "BarcodeType": "CODEQR",  "Barcode": "www.pavlyukevich.ru"  } }'.encode('utf-8'))
+# requests.post('http://localhost:1212',data='{  "BillType": 2,  "BillOtdel": "",  "BillKassir": "Иванов",  "BillNumDoc": "",  "BillTax": "3",  "BarCodeHeader": {  "BarcodeType": "PDF417",  "Barcode": "www.pavlyukevich.ru"  },  "CheckStrings": [  {  "Name": "Сотовый телефон Nokia 3310",  "Art": 1,  "Quantity": 1,  "Price": 0.10,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  },  {  "Name": "Сотовый телефон Nokia 3410",  "Art": 1,  "Quantity": 1,  "Price": 0.50,  "Tax": 3,  "Posicion": "",  "Department": 0,  "TypeSale": 3,  "Rezerv": "",  "SumSale": "",  "PSR": 4,  "PPR": 1  }  ],  "Cash": 0.60,  "PayByCard": 0,  "PayByCredit": 0,  "PayByCertificate": 0,  "ClientTel": "",  "BarCodeFooter": {  "BarcodeType": "CODEQR",  "Barcode": "www.pavlyukevich.ru"  } }'.encode('utf-8'))
 
-# a = '{  "BillType": 666, "El":[{"Command" : "30" , "Arg" : [49,1,"Popov",100,4]},{"Command" : "40" , "Arg" : ["РџСЂРѕРІРµСЂРєР° С‚РµРєСЃС‚Р°.РњР°Р»С‹Р№ С‚РµРєСЃС‚.0123456789[43]1234",0]},{"Command" : "40" , "Arg" : ["РЁРёСЂРѕРєРёР№>>>>>>>>>[20]>",32]},{"Command" : "40" , "Arg" : ["Р’Р«РЎРћРљРР™ РЁР РР¤Рў4567890123456789012345678[42]3",16]},{"Command" : "40" , "Arg" : ["РїРѕРґС‡РµСЂРєРЅСѓС‚СЊ",128]},{"Command" : "41" , "Arg" : [0,5,0,8,"t=20200203T1604&s=1.00&fn=9287440300026894&i=34014&fp=2972911564&n=1"]},{"Command" : "32" , "Arg" : [0,"a@a-34.ru"]}    ]}'
+# a = '{  "BillType": 666, "El":[{"Command" : "30" , "Arg" : [49,1,"Popov",100,4]},{"Command" : "40" , "Arg" : ["Проверка текста.Малый текст.0123456789[43]1234",0]},{"Command" : "40" , "Arg" : ["Широкий>>>>>>>>>[20]>",32]},{"Command" : "40" , "Arg" : ["ВЫСОКИЙ ШРИФТ4567890123456789012345678[42]3",16]},{"Command" : "40" , "Arg" : ["подчеркнуть",128]},{"Command" : "41" , "Arg" : [0,5,0,8,"t=20200203T1604&s=1.00&fn=9287440300026894&i=34014&fp=2972911564&n=1"]},{"Command" : "32" , "Arg" : [0,"a@a-34.ru"]}    ]}'
 # requests.post('http://localhost:1212',data=a.encode('utf-8'))
 import sys
 
@@ -43,10 +48,129 @@ try:
     config = configparser.ConfigParser()
     config.read('kassa2021.ini')
 except:
-    print('РћРЁРР‘РљРђ Р§РўР•РќРРЇ ini Р¤РђР™Р›Рђ! РџР РћР“Р РђРњРњРђ РќР• РњРћР–Р•Рў Р”РђР›Р¬РЁР• Р РђР‘РћРўРђРўР¬!!!!')
-    print('РёСЃРїСЂР°РІСЊС‚Рµ ini С„Р°Р№Р» - Рё Р·Р°РїСѓСЃС‚РёС‚Рµ Р·Р°РЅРѕРІРѕ')
+    print('ОШИБКА ЧТЕНИЯ ini ФАЙЛА! ПРОГРАММА НЕ МОЖЕТ ДАЛЬШЕ РАБОТАТЬ!!!!')
+    print('исправьте ini файл - и запустите заново')
     while True:
         input()
+
+
+COMIN = config['DEFAULT']['COMPROXYKASSA']  # 'COM7' # порт компрокси для кассы
+ipport = int(config['SERVER']['IPPORT']) # PORTA = "3333"
+ip = config['SERVER']['IPSERVER'] # '10.10.8.190'
+flagserver = config['SERVER']['SERVERCLIENT'] # 'server'
+
+sock = ''
+max = 20
+client = []
+gport={}
+
+#---- блок IP SOCK --------------
+# отправка данных на кассу или в IP
+def pportinwrite(s):
+    if 'server' in flagserver:
+        print(type(s))
+        portin.write(str_to_byte(s))
+    elif flagserver == 'client':
+        sock.send(s)
+    else:
+        print("Ты сервер или клиент? внеси данные в конфигурацию!")
+
+
+# сервер.приём сообщений и пересылка в порт
+def f(num, conn1, addr1):
+        global client,pport,gport
+        #try:
+        while True:
+            data = conn1.recv(2024)
+            if data != b'':
+                ipclient = f"{conn1.getpeername()}"
+                strsend = data #.decode('utf-8') #f"{data}"[2:-1]
+                # print(f"{conn1.getpeername()}- {(data.decode())}=")
+                print(data)
+                print(kIn(data)['id'])
+                print(kIn(data)['cod'])
+                print(byte_to_str(kIn(data)['id']))
+                print(byte_to_str(kIn(data)['cod']))
+
+
+                print(f"{ipclient}- {strsend}=")
+                # добавить в список команд и отослать на порт
+                # conn.send('Ok'.encode())
+                #serverclient(ipclient, f"ok:{strsend}")
+                pport = 7
+                #print(byte_to_str({kIn(data)['id']}))
+                #print(byte_to_str({kIn(data)['cod']}))
+
+                gport.update([(f"{byte_to_str(kIn(strsend)['id'])}{byte_to_str(kIn(strsend)['cod'])}", f"{ipclient}")])  # 270121
+                print(gport)
+                #pportinwrite(f"{strsend}")
+                portin.write(data)
+                # требуется проверка свободности кассы 280121
+
+        ##except:
+        #   print('Отключили...')
+        #    client.remove(conn1)
+
+# сервер2клиент
+# сервер отвечает клиенту
+def serverclient(ipclient, strsend):
+    global client
+    for c in client:
+        try:
+            if str(c.getpeername()) == ipclient:
+                print('ответ:',strsend)
+                c.send(strsend) #                c.send(strsend.encode())
+        except:
+            print(f"удаляем поток {c}")
+            client.pop(c)
+
+def serverwait():
+    sock = socket.socket()
+    sock.bind(('', ipport))
+    sock.listen(max)
+    nn = 0
+    while True:
+        nn += 1
+        conn, addr = sock.accept()
+        print(f"Новое подключение n:{nn} conn:{conn} addr:{addr}")
+        client.append(conn)
+        #conn.send('Соединение с сервером установлено'.encode())
+        thread10 = Thread(target=f, args=(nn, conn, addr,))
+        thread10.start()
+
+# получение данных клиентом
+def connectClient():
+    global sock
+    try:
+        sock = socket.socket()
+        sock.connect((ip, ipport))
+        while True:
+            data = sock.recv(1024)
+            print(data)
+            # определить заказчика, пока отсылаем в 1 порт !!!!!
+            portout.write(data)
+
+            data = data.decode()
+            print(f"> {data}")
+            #time.sleep(3)
+    except:
+        print("другая ошибка")
+        time.sleep(3)
+        sock.close()
+        connectClient()
+
+
+if 'server' in flagserver:
+    print("Запускаем сервер ip")
+    thread7 = Thread(target=serverwait, args=())
+    thread7.start()
+if flagserver == 'client':
+    thread8 = Thread(target=connectClient, args=())
+    thread8.start()
+#--------------------------------------------------------
+
+
+
 
 leveld = int(config['LOG']['Logging'])  # logging.DEBUG
 logging.basicConfig(level=leveld, filename='kassa2021.log', format='%(asctime)s %(levelname)s:%(message)s')
@@ -57,43 +181,44 @@ PASS = 'PIRI'
 ENQ = '\x05'  # 0x03
 ACK = '\x06'  # 0x03
 FS = '\x1c'  # 0x1C
-LF = '\x0A'  # 0x0A РїРµСЂРµРјРѕС‚РєР° Р±СѓРјР°РіРё
+LF = '\x0A'  # 0x0A перемотка бумаги
 lastfid = 0
 
 
-# РџРѕС‚РѕРє РїРѕР»СѓС‡РµРЅРёСЏ РёРЅС„РѕСЂРјР°С†РёРё РёР· РљРљРў
-def thread_function1(name):  # РёР· KKT РїРѕР»СѓС‡Р°РµРј
+# Поток получения информации из ККТ
+def thread_function1(name):  # из KKT получаем
     global pport
     global txtpost
     global wait
     global last_cod
 
-    print('РџСЂРѕРІРµСЂРєР° СЃРІСЏР·Рё СЃ РєР°СЃСЃРѕР№...')
+    print('Проверка связи с кассой...')
     while True:
         # if wait == False:
-        ###print(' СЏ СЃРЅРѕРІР° Р·РґРµСЃСЊ')
+        ###print(' я снова здесь')
 
-        # РёР· РљРљРў ========
-        # --------- Р±Р»РѕРє РїРѕР»СѓС‡РµРЅРёСЏ РёРЅС„РѕСЂРјР°С†РёРё ---------------
+        # из ККТ ========
+        # --------- блок получения информации ---------------
         bytes_to_read = ''
-        bytes_to_read = portin.read(1)  # СЃС‡РёС‚С‹РІР°РµРј Р±Р°Р№С‚, РµСЃР»Рё
+        bytes_to_read = portin.read(1)  # считываем байт, если
         if bytes_to_read == b'\x06':  #
-            print("\t\t... РєР°СЃСЃР° РѕС‚РІРµС‚РёР»Р° РЅР° Р·Р°РїСЂРѕСЃ - СЂР°Р±РѕС‚Р°РµС‚\n", "- " * 40)
+            print("\t\t... касса ответила на запрос - работает\n", "- " * 40)
             # portin.write(bytes_to_read)
         else:
             bytes_to_read += portin.read_until(b"\x03")
             ###print(bytes_to_read)
             bytes_to_read += portin.read(2)
             ###print(bytes_to_read)
-            # --------- Р±Р»РѕРє РїРѕР»СѓС‡РµРЅРёСЏ РёРЅС„РѕСЂРјР°С†РёРё ---------------
+            # --------- блок получения информации ---------------
             ###print(bytes_to_read.hex())
             kOut1 = kOut(bytes_to_read)
-
             bts = byte_to_str(kOut1['data']).split('\x1c')
+            bts1 = [str(str_to_byte(btsx), 'cp866') for btsx in bts]
+
             # print(f"K>{pport}: ", [f'{r}:{kOut1[r]}' for r in ['id', 'cod', 'error']], data: f'{bts}')
-            txtprint = f" K>{pport}: {[f'{r}:{kOut1[r]}' for r in ['id', 'cod', 'error']]} data: {bts}"
+            txtprint = f" K>{pport}: {[f'{r}:{kOut1[r]}' for r in ['id', 'cod', 'error']]} data: {bts1}"
             print(txtprint)
-            logging.info(txtprint)
+            logging.info(txtprint) #.encode('utf-8-sig').decode('cp-1251')
             logging.debug(f" K>{pport} : {kOut1}")
             logging.debug(f" K>{pport} : bytes_to_read:{bytes_to_read}")
 
@@ -105,14 +230,14 @@ def thread_function1(name):  # РёР· KKT РїРѕР»СѓС‡Р°РµРј
                 portout.write(bytes_to_read)
             elif pport == 2:
                 portout2.write(bytes_to_read)
-            elif pport == 3:  # СЂР°Р±РѕС‚Р° СЃ РєР°СЃСЃРѕР№ РёР· РєРѕРЅСЃРѕР»Рё
+            elif pport == 3:  # работа с кассой из консоли
                 pass
-            #    print("... СЂР°Р±РѕС‚Р° СЃ РєР°СЃСЃРѕР№ РёР· РєРѕРЅСЃРѕР»Рё ...")
+            #    print("... работа с кассой из консоли ...")
             #    # print(f"K>{pport}: ", [f'{i}:{kOut1[i]}' for i in ['id', 'cod', 'error', 'data']])
             #    print(
             #        f"{s} K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}")  # for i in ['id', 'cod', 'error', 'data']])")
 
-            elif pport == 4:  # СЂР°Р±РѕС‚Р° СЃ POST
+            elif pport == 4:  # работа с POST
                 # self.wfile.write(bytes(s, "utf-8"))
                 # tpost =(f"K>{pport}: ", [f'{i}:{kOut1[i]}' for i in ['id', 'cod', 'error', 'data']])
                 # 110121 tpost = f"K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}"  # for i in ['id', 'cod', 'error', 'data']])"
@@ -122,7 +247,7 @@ def thread_function1(name):  # РёР· KKT РїРѕР»СѓС‡Р°РµРј
                     wait = False
                 # print(f"txtpost:{txtpost}")
 
-            elif pport == 5:  # СЂР°Р±РѕС‚Р° СЃ POST
+            elif pport == 5:  # работа с POST
                 # self.wfile.write(bytes(s, "utf-8"))
                 # tpost =(f"K>{pport}: ", [f'{i}:{kOut1[i]}' for i in ['id', 'cod', 'error', 'data']])
                 # 110121tpost = f"K>{pport}: ID:{byte_to_str(kOut1['id'])} COD:{byte_to_str(kOut1['cod'])} ERROR:{byte_to_str(kOut1['error'])}  DATA:{bts}"  # for i in ['id', 'cod', 'error', 'data']])"
@@ -131,6 +256,9 @@ def thread_function1(name):  # РёР· KKT РїРѕР»СѓС‡Р°РµРј
                 if byte_to_str(kOut1['id']) == last_cod:  # b'31':
                     wait = False
                 # print(f"txtpost:{txtpost}")
+            elif pport == 7:  # работа с POST
+                gp = gport.pop(f"{byte_to_str(kOut1['id'])}{byte_to_str(kOut1['cod'])}", None)  # 270121
+                serverclient(gp, bytes_to_read)
 
             else:
                 print("ERROR PORT!!!!")
@@ -148,24 +276,24 @@ def thread_function1(name):  # РёР· KKT РїРѕР»СѓС‡Р°РµРј
             # cod02(bts)
 
         # wait = True
-        ###print('Р·Р°РєРѕРЅС‡РёР» РїРµСЂРµРґР°С‡Сѓ')
+        ###print('закончил передачу')
 
 
 #
-# РџРѕС‚РѕРє РїРѕР»СѓС‡РµРЅРёСЏ РёРЅС„РѕСЂРјР°С†РёСЏ РёР· РџРѕСЂС‚Р° 1
+# Поток получения информация из Порта 1
 #
 def thread_function2(name):
-    global pport, txtpost
+    global pport, txtpost,gport
 
     while True:
         try:
-            bytes_to_read = portout.read(1)  # СЃС‡РёС‚С‹РІР°РµРј Р±Р°Р№С‚, РµСЃР»Рё
+            bytes_to_read = portout.read(1)  # считываем байт, если
             if bytes_to_read == b'\x05':  #
-                print("1>РџСЂРѕРІРµСЂРєР° СЃРІСЏР·Рё")
-                logging.info(" 1>K: РџСЂРѕРІРµСЂРєР° СЃРІСЏР·Рё(Р°РІС‚РѕРѕС‚РІРµС‚)")
+                print("1>Проверка связи")
+                logging.info(" 1>K: Проверка связи(автоответ)")
                 portout.write(b'\x06')  # portin.write(bytes_to_read)
             elif bytes_to_read == b'\x0A':  #
-                print("1>РїРµСЂРµРІРѕРґ СЃС‚СЂРѕРєРё")
+                print("1>перевод строки")
                 portin.write(bytes_to_read)
             else:
                 bytes_to_read += portout.read_until(b"\x03")
@@ -173,38 +301,39 @@ def thread_function2(name):
                 kIn1 = kIn(bytes_to_read)
                 bts = byte_to_str(kIn1['data']).split('\x1c')
 
-                # 11/01/21 РІРЅРµСЃС‚Рё РёР·РјРµРЅРµРЅРёСЏ РІ РґР°РЅРЅС‹Рµ РїСЂРё РЅРµРїСЂР°РІРёР»СЊРЅС‹С…
-                # РєРѕСЂСЂРµРєС†РёСЏ С‡РµРєР° РґР»СЏ СЃС‚Р°СЂС‹С… РґСЂР°Р№РІРµСЂРѕРІ 1СЃ
+                # 11/01/21 внести изменения в данные при неправильных
+                # коррекция чека для старых драйверов 1с
                 #
                 if (len(bts) < 5) and kIn1['cod'] == b'30' and bts[0] == '2':
-                    # РїРµСЂРµСЃРѕР±СЂР°С‚СЊ СЃС‚СЂРѕРєСѓ РѕС‚СЃС‹Р»РєРё
+                    # пересобрать строку отсылки
                     bytes_to_read = new_str(byte_to_str(kIn1['id']), byte_to_str(kIn1['cod']),
                                             [2, bts[1], bts[2], 0, 1])
                     kIn1 = kIn(bytes_to_read)
                     bts = byte_to_str(kIn1['data']).split('\x1c')
 
                 if (len(bts) < 8 ) and kIn1['cod'] == b'42':
-                    # РїРµСЂРµСЃРѕР±СЂР°С‚СЊ СЃС‚СЂРѕРєСѓ РѕС‚СЃС‹Р»РєРё
-                    pr_sposob = 4  # 4 - РџРѕР»РЅС‹Р№ СЂР°СЃС‡РµС‚
+                    # пересобрать строку отсылки
+                    pr_sposob = 4  # 4 - Полный расчет
                     pr_ras = ""
                     tova = str(str_to_byte(bts[0]), 'cp866')
-                    if tova[0:6] == '[РћС‚Рґ1]':
-                        pr_ras = 4  #РџР»Р°С‚С‘Р¶
-                    if tova[0:6] == '[РћС‚Рґ2]':
-                        pr_ras = 1  #РўРѕРІР°СЂ
-                    if tova[0:6] == '[РћС‚Рґ3]':
-                        pr_ras = 4  #РўРѕРІР°СЂ
+                    if tova[0:6] == '[Отд1]':
+                        pr_ras = 4  #Платёж
+                    if tova[0:6] == '[Отд2]':
+                        pr_ras = 1  #Товар
+                    if tova[0:6] == '[Отд3]':
+                        pr_ras = 4  #Товар
 
                     bytes_to_read = new_str(byte_to_str(kIn1['id']), byte_to_str(kIn1['cod']),
                         [bts[0], bts[1], bts[2], bts[3], 3, bts[5], 1, 0, "", "0.000", pr_sposob,  pr_ras ])
                     kIn1 = kIn(bytes_to_read)
                     bts = byte_to_str(kIn1['data']).split('\x1c')
-                # РєРѕРЅРµС† Р±Р»РѕРєР°
+                # конец блока
 
-                # РїРµСЂРµРєРѕРґРёСЂРѕРІРєР° РґР°РЅРЅС‹С… РІ С‡РёС‚Р°РµРјС‹Р№ С‚РµРєСЃС‚ РґР»СЏ РІС‹РІРѕРґР° Рё Р»РѕРіР°
+                # перекодировка данных в читаемый текст для вывода и лога
                 bts1 = [str(str_to_byte(btsx), 'cp866') for btsx in bts]
 
-                portin.write(bytes_to_read)
+                #portin.write(bytes_to_read)
+                pportinwrite(bytes_to_read) #2801
                 pport = 1
 
                 txtprint = f" 1>K: {[f'{r}:{byte_to_str(kIn1[r])}' for r in ['id', 'cod']]} data: {bts1}"
@@ -212,24 +341,27 @@ def thread_function2(name):
                 logging.info(txtprint)
                 logging.debug(f" 1>K: {kIn1}")
                 logging.debug(f" 1>K: bytes_to_read: {bytes_to_read}")
+
+
+
         except:
-            print(f"РџРѕСЂС‚1 РћРЁРР‘РљРђ :{traceback.format_exc()} РІ РјРѕРґСѓР»Рµ РїРѕР»СѓС‡РµРЅРёСЏ РґР°РЅРЅС‹С…. ")
-            logging.error(f"РџРѕСЂС‚1 РћС€РёР±РєР° {traceback.format_exc()} РІ РјРѕРґСѓР»Рµ РїРѕР»СѓС‡РµРЅРёСЏ РґР°РЅРЅС‹С…. ")
+            print(f"Порт1 ОШИБКА :{traceback.format_exc()} в модуле получения данных. ")
+            logging.error(f"Порт1 Ошибка {traceback.format_exc()} в модуле получения данных. ")
 
 
-# РџРѕС‚РѕРє РїРѕР»СѓС‡РµРЅРёСЏ РёРЅС„РѕСЂРјР°С†РёСЏ РёР· РџРѕСЂС‚Р° 2
+# Поток получения информация из Порта 2
 def thread_function3(name):
     global pport, txtpost
 
     while True:
         try:
-            bytes_to_read = portout2.read(1)  # СЃС‡РёС‚С‹РІР°РµРј Р±Р°Р№С‚, РµСЃР»Рё
+            bytes_to_read = portout2.read(1)  # считываем байт, если
             if bytes_to_read == b'\x05':  #
-                print("2>РџСЂРѕРІРµСЂРєР° СЃРІСЏР·Рё")
-                logging.info(" 2>K: РџСЂРѕРІРµСЂРєР° СЃРІСЏР·Рё(Р°РІС‚РѕРѕС‚РІРµС‚)")
+                print("2>Проверка связи")
+                logging.info(" 2>K: Проверка связи(автоответ)")
                 portout2.write(b'\x06')  # portin.write(bytes_to_read)
             elif bytes_to_read == b'\x0A':  #
-                print("2>РїРµСЂРµРІРѕРґ СЃС‚СЂРѕРєРё")
+                print("2>перевод строки")
                 portin.write(bytes_to_read)
             else:
                 bytes_to_read += portout2.read_until(b"\x03")
@@ -237,35 +369,35 @@ def thread_function3(name):
                 kIn2 = kIn(bytes_to_read)
                 bts = byte_to_str(kIn2['data']).split('\x1c')
 
-                # 11/01/21 РІРЅРµСЃС‚Рё РёР·РјРµРЅРµРЅРёСЏ РІ РґР°РЅРЅС‹Рµ РїСЂРё РЅРµРїСЂР°РІРёР»СЊРЅС‹С…
-                # РєРѕСЂСЂРµРєС†РёСЏ С‡РµРєР° РґР»СЏ СЃС‚Р°СЂС‹С… РґСЂР°Р№РІРµСЂРѕРІ 1СЃ
+                # 11/01/21 внести изменения в данные при неправильных
+                # коррекция чека для старых драйверов 1с
                 #
                 if (len(bts) < 5) and kIn2['cod'] == b'30' and bts[0] == '2':
-                    # РїРµСЂРµСЃРѕР±СЂР°С‚СЊ СЃС‚СЂРѕРєСѓ РѕС‚СЃС‹Р»РєРё
+                    # пересобрать строку отсылки
                     bytes_to_read = new_str(byte_to_str(kIn2['id']), byte_to_str(kIn2['cod']),
                                             [2, bts[1], bts[2], 0, 1])
                     kIn2 = kIn(bytes_to_read)
                     bts = byte_to_str(kIn2['data']).split('\x1c')
 
                 if (len(bts) < 8 ) and kIn2['cod'] == b'42':
-                    # РїРµСЂРµСЃРѕР±СЂР°С‚СЊ СЃС‚СЂРѕРєСѓ РѕС‚СЃС‹Р»РєРё
-                    pr_sposob = 4  # 4 - РџРѕР»РЅС‹Р№ СЂР°СЃС‡РµС‚
+                    # пересобрать строку отсылки
+                    pr_sposob = 4  # 4 - Полный расчет
                     pr_ras = ""
                     tova = str(str_to_byte(bts[0]), 'cp866')
-                    if tova[0:6] == '[РћС‚Рґ1]':
-                        pr_ras = 4  #РџР»Р°С‚С‘Р¶
-                    if tova[0:6] == '[РћС‚Рґ2]':
-                        pr_ras = 1  #РўРѕРІР°СЂ
-                    if tova[0:6] == '[РћС‚Рґ3]':
-                        pr_ras = 4  #РўРѕРІР°СЂ
+                    if tova[0:6] == '[Отд1]':
+                        pr_ras = 4  #Платёж
+                    if tova[0:6] == '[Отд2]':
+                        pr_ras = 1  #Товар
+                    if tova[0:6] == '[Отд3]':
+                        pr_ras = 4  #Товар
 
                     bytes_to_read = new_str(byte_to_str(kIn2['id']), byte_to_str(kIn2['cod']),
                         [bts[0], bts[1], bts[2], bts[3], 3, bts[5], 1, 0, "", "0.000", pr_sposob,  pr_ras ])
                     kIn2 = kIn(bytes_to_read)
                     bts = byte_to_str(kIn2['data']).split('\x1c')
-                # РєРѕРЅРµС† Р±Р»РѕРєР°
+                # конец блока
 
-                # РїРµСЂРµРєРѕРґРёСЂРѕРІРєР° РґР°РЅРЅС‹С… РІ С‡РёС‚Р°РµРјС‹Р№ С‚РµРєСЃС‚ РґР»СЏ РІС‹РІРѕРґР° Рё Р»РѕРіР°
+                # перекодировка данных в читаемый текст для вывода и лога
                 bts1 = [str(str_to_byte(btsx), 'cp866') for btsx in bts]
 
                 portin.write(bytes_to_read)
@@ -277,13 +409,13 @@ def thread_function3(name):
                 logging.debug(f" 2>K: {kIn2}")
                 logging.debug(f" 2>K: bytes_to_read: {bytes_to_read}")
         except:
-            print(f"РџРѕСЂС‚2 РћРЁРР‘РљРђ :{traceback.format_exc()} РІ РјРѕРґСѓР»Рµ РїРѕР»СѓС‡РµРЅРёСЏ РґР°РЅРЅС‹С…. ")
-            logging.error(f"РџРѕСЂС‚2 РћС€РёР±РєР° {traceback.format_exc()} РІ РјРѕРґСѓР»Рµ РїРѕР»СѓС‡РµРЅРёСЏ РґР°РЅРЅС‹С…. ")
+            print(f"Порт2 ОШИБКА :{traceback.format_exc()} в модуле получения данных. ")
+            logging.error(f"Порт2 Ошибка {traceback.format_exc()} в модуле получения данных. ")
 
 #  id = kIn2['id'].decode(encoding="utf-8", errors="strict")
 
 
-# РџРѕС‚РѕРє РїРѕР»СѓС‡РµРЅРёСЏ РёРЅС„РѕСЂРјР°С†РёСЏ РёР· РљРѕРЅСЃРѕР»Рё
+# Поток получения информация из Консоли
 def thread_maincourceA(name):  #
     global inKKT
     global inSOFT
@@ -300,24 +432,24 @@ def thread_maincourceA(name):  #
             #    print('exit1')
             #    sys.exit()
             #    print('exit2')
-            if inp in ['X', 'x', 'РҐ', 'С…']:  # x - РѕС‚С‡С‘С‚
+            if inp in ['X', 'x', 'Х', 'х']:  # x - отчёт
                 pport = 3
                 # ll = chr(random.choice(l))
-                # sss = new_str(f"{ll}", '20', rus('Р¤РРћ РљР°СЃСЃРёСЂР°'))
-                sss = new_str(fid(), '20', rus('Р¤РРћ РљР°СЃСЃРёСЂР°'))
+                # sss = new_str(f"{ll}", '20', rus('ФИО Кассира'))
+                sss = new_str(fid(), '20', rus('ФИО Кассира'))
                 # print(sss)
                 # print(f"{sss}")
-                print('X-РћС‚С‡С‘С‚')
+                print('X-Отчёт')
                 portin.write(sss)
-            elif inp in ['help', 'h', 'H', 'HELP', 'Help', 'СЂ', '?']:  # z - РѕС‚С‡С‘С‚
+            elif inp in ['help', 'h', 'H', 'HELP', 'Help', 'р', '?']:  # z - отчёт
                 print(txthelp)
-            elif inp in ['Z', 'z', 'РЇ', 'СЏ']:  # z - РѕС‚С‡С‘С‚
+            elif inp in ['Z', 'z', 'Я', 'я']:  # z - отчёт
                 pport = 3
                 # ll = chr(random.choice(l))
-                sss = new_str(fid(), '21', rus('Р¤РРћ РљР°СЃСЃРёСЂР°'))
+                sss = new_str(fid(), '21', rus('ФИО Кассира'))
                 # print(sss)
                 # print(f"{sss}")
-                print('Z-РћС‚С‡С‘С‚')
+                print('Z-Отчёт')
                 portin.write(sss)
 
             elif inp in ['restart', 're', 'reboot']:  # restart
@@ -326,51 +458,51 @@ def thread_maincourceA(name):  #
                 sss = new_str(fid(), '9C', "")
                 print(sss)
                 # print(f"{sss}")
-                print('Р РµСЃС‚Р°СЂС‚ РљРљРў')
+                print('Рестарт ККТ')
                 portin.write(sss)
 
 
-            elif inp in ['00']:  # z - СЃРѕСЃС‚РѕСЏРЅРёРµ РєР°СЃСЃС‹
+            elif inp in ['00']:  # z - состояние кассы
                 pport = 3
                 # ll = chr(random.choice(l))
                 sss = new_str(fid(), '00', '0')
-                print('3>K:РЎРѕСЃС‚РѕСЏРЅРёРµ [00]')
+                print('3>K:Состояние [00]')
                 portin.write(sss)
                 pport = 3
                 # ll = chr(random.choice(l))
                 sss = new_str(fid(), '02', '2')
-                print('3>K:РџСЂРѕС€РёРІРєР° [2.2]')
+                print('3>K:Прошивка [2.2]')
                 portin.write(sss)
                 pport = 3
                 # ll = chr(random.choice(l))
                 sss = new_str(fid(), '04', '')
-                print('3>K:РџСЂРёРЅС‚РµСЂ [4]')
+                print('3>K:Принтер [4]')
                 portin.write(sss)
 
 
-            elif inp in ['out']:  # 32. РђРЅРЅСѓР»РёСЂРѕРІР°С‚СЊ РґРѕРєСѓРјРµРЅС‚
+            elif inp in ['out']:  # 32. Аннулировать документ
                 pport = 3
                 # ll = chr(random.choice(l))
                 sss = new_str(fid(), '32', '')
                 # print(sss)
                 # print(f"{sss}")
-                print('РђРЅРЅСѓР»РёСЂРѕРІР°С‚СЊ РґРѕРєСѓРјРµРЅС‚')
+                print('Аннулировать документ')
                 portin.write(sss)
 
-            elif inp == 'proxy':  # РїСЂРѕРІРµСЂРєР° СЃРІСЏР·Рё
-                service_request = psutil.win_service_get('ComProxy')  # РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє СЃР»СѓР¶Р±Рµ ComProxy
-                print(service_request.name(), service_request.status())  # Р·Р°РїСЂРѕСЃ РЅР° РёРјСЏ СЃР»СѓР¶Р±С‹ Рё РµРµ СЃС‚Р°С‚СѓСЃ
-                if service_request.status() == 'stopped':  # СѓСЃР»РѕРІРёРµ РЅР° РїРµСЂРµР·Р°РїСѓСЃРє СЃР»СѓР¶Р±С‹
+            elif inp == 'proxy':  # проверка связи
+                service_request = psutil.win_service_get('ComProxy')  # подключение к службе ComProxy
+                print(service_request.name(), service_request.status())  # запрос на имя службы и ее статус
+                if service_request.status() == 'stopped':  # условие на перезапуск службы
                     subprocess.call('net start ComProxy')
-                    print('service ... Р·Р°РїСѓСЃРєР°РµРј')
+                    print('service ... запускаем')
                 else:
-                    print('service СЂР°Р±РѕС‚Р°РµС‚')
+                    print('service работает')
 
-            elif inp == '1':  # РїСЂРѕРІРµСЂРєР° СЃРІСЏР·Рё
+            elif inp == '1':  # проверка связи
                 portin.write(b'\x05')
 
-            elif inp in ['begin']:  # РЅР°С‡Р°Р»Рѕ СЂР°Р±РѕС‚С‹
-                print('РќР°С‡Р°Р»Рѕ СЂР°Р±РѕС‚С‹')
+            elif inp in ['begin']:  # начало работы
+                print('Начало работы')
                 pport = 3
                 timeb = strftime("%H%M%S", time.localtime())
                 dateb = strftime("%d%m%y", time.localtime())
@@ -381,14 +513,14 @@ def thread_maincourceA(name):  #
                 param = {dateb, timeb}
                 sss = new_str(fid(), com, param)
                 # print(sss)
-                #print(f"3>K:РЈcС‚Р°РЅРѕРІРєР°Р’СЂРµРјРµРЅРё[10]:{sss}")
+                #print(f"3>K:УcтановкаВремени[10]:{sss}")
 
                 portin.write(sss)
 
 
 
-            elif inp in ['open', 'РѕС‚РєСЂС‹С‚СЊ']:  # РѕС‚РєСЂС‹С‚РёРµ СЃРјРµРЅС‹
-                print('РћС‚РєСЂС‹С‚СЊ СЃРјРµРЅСѓ')
+            elif inp in ['open', 'открыть']:  # открытие смены
+                print('Открыть смену')
                 pport = 3
                 timeb = strftime("%H%M%S", time.localtime())
                 dateb = strftime("%d%m%y", time.localtime())
@@ -399,7 +531,7 @@ def thread_maincourceA(name):  #
                 param = {dateb, timeb}
                 sss = new_str(fid(), com, param)
                 # print(sss)
-                print(f"3>K:РЈcС‚Р°РЅРѕРІРєР°Р’СЂРµРјРµРЅРё[10]:{sss}")
+                print(f"3>K:УcтановкаВремени[10]:{sss}")
 
                 portin.write(sss)
 
@@ -407,20 +539,20 @@ def thread_maincourceA(name):  #
                 # ll = chr(random.choice(l))
                 # ll = 'O'
                 com = "23"
-                param = {rus("Р¤РРћ РљР°СЃСЃРёСЂР°")}
+                param = {rus("ФИО Кассира")}
                 sss = new_str(fid(), com, param)
                 # print(sss)
-                print(f"3>K:РћС‚РєСЂС‹С‚СЊРЎРјРµРЅСѓ[23]{sss}")
+                print(f"3>K:ОткрытьСмену[23]{sss}")
                 portin.write(sss)
 
             elif inp == 'is_open':
-                print("РџСЂРѕРІРµСЂРєР° СЃРѕСЃС‚РѕСЏРЅРёСЏ РїРѕСЂС‚РѕРІ:")
+                print("Проверка состояния портов:")
                 print(f"PORTIN   {portin.is_open}")
                 print(f"PORTOUT  {portout.is_open}")
                 print(f"PORTOUT2 {portout2.is_open}")
 
             elif inp == 'reopen':
-                print("РџРµСЂРµРѕС‚РєСЂС‹С‚РёРµ РїРѕСЂС‚РѕРІ")
+                print("Переоткрытие портов")
                 # global COMIN
                 # portin.port = COMIN
                 # = serial.Serial(port=COMIN, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
@@ -440,20 +572,20 @@ def thread_maincourceA(name):  #
 
             elif inp == '911':
                 pport = 3
-                com = input("РљРѕРЅСЃРѕР»СЊРЅС‹Р№ СЂРµР¶РёРј СЂР°Р±РѕС‚С‹ СЃ РєР°СЃСЃРѕР№ \nР’РІРµРґРёС‚Рµ РєРѕРјР°РЅРґСѓ : ")
-                # РїСЂРѕРІРµСЂРєР° РЅР° СЃРїРёСЃРѕРє РґРѕСЃС‚СѓРїРЅС‹С… РєРѕРјР°РЅРґ, РµСЃР»Рё РЅРµС‚ РІ СЃРїРёСЃРєРµ - РёСЃРєР»СЋС‡РµРЅРёРµ
+                com = input("Консольный режим работы с кассой \nВведите команду : ")
+                # проверка на список доступных команд, если нет в списке - исключение
                 try:
                     print(f"{com} # {command[com]}")
-                    print("Р’РІРµРґРёС‚Рµ РїР°СЂР°РјРµС‚СЂС‹, РѕРєРѕРЅС‡Р°РЅРёРµ - РїСѓСЃС‚РѕР№ РїР°СЂР°РјРµС‚СЂ (Enter)")
+                    print("Введите параметры, окончание - пустой параметр (Enter)")
                     param = []
                     p = '1'
                     i = 0
                     while p != '':
-                        p = input(f"РџР°СЂР°РјРµС‚СЂ {i}: ")
+                        p = input(f"Параметр {i}: ")
                         i += 1
                         if p != '':
                             param.append(rus(p))
-                    if input("Р’РІРµРґРёС‚Рµ 1 РґР»СЏ РѕС‚РїСЂР°РІРєРё ") == '1':
+                    if input("Введите 1 для отправки ") == '1':
                         # ll = chr(random.choice(l))
                         # ll='R'
                         sss = new_str(fid(), com, param)  # f"{ll}"
@@ -461,17 +593,17 @@ def thread_maincourceA(name):  #
                         print(f"{sss}")
                         portin.write(sss)
                     else:
-                        print("РћС‚РјРµРЅР° РѕС‚РїСЂР°РІРєРё")
+                        print("Отмена отправки")
                 except:
-                    print('#! РќР•Р”РћРџРЈРЎРўРРњРђРЇ РљРћРњРђРќР”Рђ')
-                    logging.error(f"#! РќР•Р”РћРџРЈРЎРўРРњРђРЇ РљРћРњРђРќР”Рђ: {traceback.format_exc()}")
+                    print('#! НЕДОПУСТИМАЯ КОМАНДА')
+                    logging.error(f"#! НЕДОПУСТИМАЯ КОМАНДА: {traceback.format_exc()}")
 
 
             elif inp == '900':
 
                 pport = 3
-                print("РљРѕРЅСЃРѕР»СЊРЅС‹Р№ СЂРµР¶РёРј СЂР°Р±РѕС‚С‹ СЃ РєР°СЃСЃРѕР№ \nРљРѕРјР°РЅРґР° + РїР°СЂР°РјРµС‚СЂС‹ С‡РµСЂРµР· РїСЂРѕР±РµР» \n "
-                      "РћС‚РїСЂР°РІРёС‚СЊ - РїРѕСЃР»РµРґРЅСЏСЏ СЃС‚СЂРѕРєР° end")
+                print("Консольный режим работы с кассой \nКоманда + параметры через пробел \n "
+                      "Отправить - последняя строка end")
                 com900 = input()
 
                 while com900 != 'end':
@@ -482,18 +614,18 @@ def thread_maincourceA(name):  #
                     else:
                         com101 = com900
                         param = []
-                    # РїСЂРѕРІРµСЂРєР° РЅР° СЃРїРёСЃРѕРє РґРѕСЃС‚СѓРїРЅС‹С… РєРѕРјР°РЅРґ, РµСЃР»Рё РЅРµС‚ РІ СЃРїРёСЃРєРµ - РёСЃРєР»СЋС‡РµРЅРёРµ
+                    # проверка на список доступных команд, если нет в списке - исключение
                     print(f"{com101} # {command[com101]}")
                     sss = new_str(fid(), com101, param)  # f"{ll}"
                     portin.write(sss)
                     # time.sleep(0.5)
                     com900 = input()
             #            except:
-            #                    print(f'{com101} #! РќР•Р”РћРџРЈРЎРўРРњРђРЇ РљРћРњРђРќР”Рђ')
+            #                    print(f'{com101} #! НЕДОПУСТИМАЯ КОМАНДА')
 
             elif inp == '922':
                 pport = 3
-                d = input("РћС‚РїСЂР°РІРєР° РЅР° РєР°СЃСЃСѓ СЃС‚СЂРѕРєРё (Р±РµР· РєРѕРЅС‚СЂРѕР»СЊРЅРѕР№ СЃСѓРјРјС‹) : ")
+                d = input("Отправка на кассу строки (без контрольной суммы) : ")
                 # sss1=sss.encode()
                 print(d)
 
@@ -517,7 +649,7 @@ def thread_maincourceA(name):  #
                 # eee = str_to_byte(sss)
                 print(eee)
                 portin.write(eee)
-                print("РѕС‚РїСЂР°РІРёР»Рё РєРѕРјР°РЅРґСѓ: ")
+                print("отправили команду: ")
 
             elif inp == '888':
                 with open('c:/2020/kassa/spam.bmp', 'rb') as f:
@@ -543,7 +675,7 @@ def thread_maincourceA(name):  #
 
             elif inp == '999':
                 pport = 3
-                print("Р РµР¶РёРј РїР°РєРµС‚РЅРѕРіРѕ РІРІРѕРґР° РєРѕРјР°РЅРґ, РґР»СЏ РѕРєРѕРЅС‡Р°РЅРёСЏ РІРІРµРґРёС‚Рµ 1")
+                print("Режим пакетного ввода команд, для окончания введите 1")
                 d = input()
                 # d = rus(d)
                 while d != '1':
@@ -564,12 +696,12 @@ def thread_maincourceA(name):  #
                     # eee = str_to_byte(sss)
                     print(eee)
                     portin.write(eee)
-                    print("РѕС‚РїСЂР°РІРёР»Рё РєРѕРјР°РЅРґСѓ: ")
+                    print("отправили команду: ")
                     d = input()
 
         except:
-            print(f"РћС€РёР±РєР° РІ Р±Р»РѕРєРµ {traceback.format_exc()} ")
-            logging.error(f"РћС€РёР±РєР° РІ Р±Р»РѕРєРµ {traceback.format_exc()} ")
+            print(f"Ошибка в блоке {traceback.format_exc()} ")
+            logging.error(f"Ошибка в блоке {traceback.format_exc()} ")
 
 
 
@@ -580,7 +712,7 @@ def kkm_txt(a):
     global wait
     global last_cod
     pport = 4
-    txtpost = ""  # РїРµСЂРµРјРµРЅРЅР°СЏ РѕС‚РІРµС‚Р°
+    txtpost = ""  # переменная ответа
     for i in a:
         print(f"{i['Command']:}")
         com = f"{i['Command']}"
@@ -599,7 +731,7 @@ def kkm_txt(a):
     # print(f"wait = {wait}")
 
 
-# Р Р°Р±РѕС‚Р° СЃ РІРµР± РёРЅС‚РµСЂС„РµР№СЃРѕРј
+# Работа с веб интерфейсом
 class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         global wait
@@ -675,7 +807,7 @@ class Handler(BaseHTTPRequestHandler):
         s = datetime.strftime(datetime.now(), "%d.%m.%Y %H:%M:%S <br>\n \r")
         self.wfile.write(bytes(f"<p>{s}</p>", "utf-8"))
         self.wfile.write(bytes(
-            f"<p><br>{txtpost}<br></p><p>РЎРµСЂРІРµСЂ РєР°СЃСЃРѕРІС‹С… С‡РµРєРѕРІ Р·Р°РїСѓС‰РµРЅ. <br>Р Р°Р±РѕС‚Р°РµС‚. <br>РџРѕР»С‘С‚ РЅРѕСЂРјР°Р»СЊРЅС‹Р№!!!<br><br><br> \n \r ",
+            f"<p><br>{txtpost}<br></p><p>Сервер кассовых чеков запущен. <br>Работает. <br>Полёт нормальный!!!<br><br><br> \n \r ",
             "utf-8"))
         # result = self.response.json().get('result')
         # print(result)
@@ -688,7 +820,7 @@ class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
 
 def serve_on_port(sip, sport):
     try:
-        print("Р—Р°РїСѓСЃС‚РёР»Рё...")
+        print("Запустили...")
         server = ThreadingHTTPServer((sip, sport), Handler)  # localhost 10.10.8.178
         server.serve_forever()
     except KeyboardInterrupt:
@@ -703,16 +835,16 @@ pport = 0
 spisok_id = ['id', 'cod', 'data']
 
 try:
-    COMIN = config['DEFAULT']['COMPROXYKASSA']  # 'COM7' # РїРѕСЂС‚ РєРѕРјРїСЂРѕРєСЃРё РґР»СЏ РєР°СЃСЃС‹
-    COMOUT = config['DEFAULT']['COM1C1']  # 'COM15'  # РїРѕСЂС‚ СѓРєР°Р·С‹РІР°РµС‚СЃСЏ РІ 1СЃ РґР»СЏ РїРѕРґРєР»СЋС‡РµРЅРёСЏ РєР°СЃСЃС‹
+    COMIN = config['DEFAULT']['COMPROXYKASSA']  # 'COM7' # порт компрокси для кассы
+    COMOUT = config['DEFAULT']['COM1C1']  # 'COM15'  # порт указывается в 1с для подключения кассы
     COMOUT2 = config['DEFAULT']['COM1C2']  # 'COM7'
     IP = config['WEB']['IP']  # "0.0.0.0"
     Port = int(config['WEB']['Port'])  # 1212
     PersonalName = config['PERSONAL']['Name']  # "0.0.0.0"
-    logging.info(f" Р—Р°РіСЂСѓР¶Р°РµРј РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ ")
+    logging.info(f" Загружаем конфигурацию ")
 except:
-    print(f"РѕС€РёР±РєР° РґР°РЅРЅС‹С… ini С„Р°Р№Р»Р°.")
-    logging.error(f"РћС€РёР±РєР° РґР°РЅРЅС‹С… ini С„Р°Р№Р»Р° {traceback.format_exc()}")
+    print(f"ошибка данных ini файла.")
+    logging.error(f"Ошибка данных ini файла {traceback.format_exc()}")
     print(input)
     exit()
 
@@ -721,7 +853,7 @@ white = True
 
 comproxy_path = psutil.win_service_get('ComProxy').as_dict()['binpath']
 comproxy_status = psutil.win_service_get('ComProxy').as_dict()['status']
-print("РРЅС„РѕСЂРјР°С†РёСЏ Рѕ ComProxy")
+print("Информация о ComProxy")
 print(comproxy_path, comproxy_status)
 print('- ' * 15)
 
@@ -734,24 +866,26 @@ pport = 0
 last_cos = ""
 
 try:
-    print(f"COMIN : {COMIN}")
-    portin = serial.Serial(port=COMIN, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
-                           bytesize=serial.EIGHTBITS)
-    print(f"COMOUT : {COMOUT}")
-    portout = serial.Serial(port=COMOUT, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
-                            bytesize=serial.EIGHTBITS)
-    print(f"COMOUT2: {COMOUT2}")
-    portout2 = serial.Serial(port=COMOUT2, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
-                             bytesize=serial.EIGHTBITS)
+    if 'server' in flagserver:
+        print(f"COMIN : {COMIN}")
+        portin = serial.Serial(port=COMIN, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
+                               bytesize=serial.EIGHTBITS)
+    if 'client' in flagserver:
+        print(f"COMOUT : {COMOUT}")
+        portout = serial.Serial(port=COMOUT, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
+                                bytesize=serial.EIGHTBITS)
+        print(f"COMOUT2: {COMOUT2}")
+        portout2 = serial.Serial(port=COMOUT2, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
+                                 bytesize=serial.EIGHTBITS)
 except OSError as e:
-    logging.error(f"РѕС€РёР±РєР° РѕС‚РєСЂС‹С‚РёСЏ РїРѕСЂС‚ {OSError}")
-    print(f"РѕС€РёР±РєР° РѕС‚РєСЂС‹С‚РёСЏ РїРѕСЂС‚ {OSError}")
+    logging.error(f"ошибка открытия порт {OSError}")
+    print(f"ошибка открытия порт {OSError}")
     i = input()
     exit()
 
-logging.info(f" РџРѕСЂС‚С‹ РїРѕРґРєР»СЋС‡РµРЅС‹")
+logging.info(f" Порты подключены")
 
-print('РћС‚РїСЂР°РІРєР° РґР°РЅРЅС‹С… Рѕ Р·Р°РїСѓСЃРєРµ РїСЂРѕРіСЂР°РјРјС‹....')
+print('Отправка данных о запуске программы....')
 try:
     pl = platform.uname()
     data = (
@@ -759,34 +893,28 @@ try:
     data1 = {"from": "Alex", "to": "Alex2", "mes": data, "flag": "add"}
     base = "http://www.a-34.ru/MAP/p.php?"
     r = requests.get(base, params=data1)
-    # print("РћС‚РїСЂР°РІРёР» РІ Р±Р°Р·Сѓ...")#r.text)
-    print('...РґР°РЅРЅС‹Рµ РѕС‚РїСЂР°РІР»РµРЅС‹')
+    # print("Отправил в базу...")#r.text)
+    print('...данные отправлены')
 except:
-    logging.error(f"РѕС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РЅР° a-34.ru РЅРµС‚ РёРЅС‚РµСЂРЅРµС‚Р°, РёР»Рё СЃР°Р№С‚ - РѕС„С„")
-    print('...РѕС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РЅР° a-34.ru РЅРµС‚ РёРЅС‚РµСЂРЅРµС‚Р°, РёР»Рё СЃР°Р№С‚ - РѕС„С„')
+    logging.error(f"ошибка загрузки на a-34.ru нет интернета, или сайт - офф")
+    print('...ошибка загрузки на a-34.ru нет интернета, или сайт - офф')
 
-print(f"РџСЂРѕРіСЂР°РјРјР° Р·Р°РїСѓС‰РµРЅР°. РќРµ Р·Р°РєСЂС‹РІР°Р№С‚Рµ РјРµРЅСЏ. РІРµСЂСЃРёСЏ {ver}")
-# print(f"РџРѕСЂС‚С‹ РґР»СЏ РїРѕРґРєР»СЋС‡РµРЅРёСЏ:")
+print(f"Программа запущена. Не закрывайте меня. версия {ver}")
+# print(f"Порты для подключения:")
 
 print('- ' * 15)
-print("help - РґР»СЏ РІС‹РІРѕРґР° СЃРїРёСЃРєР° РєРѕРјР°РЅРґ")
+print("help - для вывода списка команд")
 print('- ' * 15)
 
-# PortOnn = {}
-wait = True
-# def hello():
-#    print("hello, world")
-#
-# t = threading.Timer(1.0, hello)
-# t.start()
-
-x = threading.Thread(target=thread_function1, args=(1,))
-x.start()
-y = threading.Thread(target=thread_function2, args=(1,))
-y.start()
-z = threading.Thread(target=thread_function3, args=(1,))
-portin.write(b'\x05')
-z.start()
+if 'server' in flagserver:
+    x = threading.Thread(target=thread_function1, args=(1,))
+    x.start()
+if 'client' in flagserver:
+    y = threading.Thread(target=thread_function2, args=(1,))
+    y.start()
+    z = threading.Thread(target=thread_function3, args=(1,))
+    #portin.write(b'\x05')
+    z.start()
 
 # - ------------------------------------
 
@@ -794,17 +922,17 @@ z.start()
 txtA = ""
 maincource = threading.Thread(target=thread_maincourceA, args=(1,))
 maincource.start()
-print(f"Р·Р°РїСѓСЃРє СЃРµСЂРІРµСЂР°: http://{IP}:{Port}")
+print(f"запуск сервера: http://{IP}:{Port}")
 serve_on_port(IP, Port)
 
 b = '{  "BillType": 666, ' \
     '"El":' \
     '[' \
     '{"Command" : "30" , "Arg" : [49,1,"Popov",100,4]},' \
-    '{"Command" : "40" , "Arg" : ["РџСЂРѕРІРµСЂРєР° С‚РµРєСЃС‚Р°.РњР°Р»С‹Р№ С‚РµРєСЃС‚.0123456789[43]1234",0]},' \
-    '{"Command" : "40" , "Arg" : ["РЁРёСЂРѕРєРёР№>>>>>>>>>[20]>",32]},' \
-    '{"Command" : "40" , "Arg" : ["Р’Р«РЎРћРљРР™ РЁР РР¤Рў4567890123456789012345678[42]3",16]},' \
-    '{"Command" : "40" , "Arg" : ["РїРѕРґС‡РµСЂРєРЅСѓС‚СЊ",128]},' \
+    '{"Command" : "40" , "Arg" : ["Проверка текста.Малый текст.0123456789[43]1234",0]},' \
+    '{"Command" : "40" , "Arg" : ["Широкий>>>>>>>>>[20]>",32]},' \
+    '{"Command" : "40" , "Arg" : ["ВЫСОКИЙ ШРИФТ4567890123456789012345678[42]3",16]},' \
+    '{"Command" : "40" , "Arg" : ["подчеркнуть",128]},' \
     '{"Command" : "41" , "Arg" : [0,5,0,8,"t=20200203T1604&s=1.00&fn=9287440300026894&i=34014&fp=2972911564&n=1"]},' \
     '{"Command" : "31" , "Arg" : [0,"a@a-34.ru"]}    ' \
     ']' \
@@ -841,7 +969,7 @@ for proc in psutil.process_iter(['pid', 'name', 'username']):
 
 '''
 
-''' РїСЂРѕР±РёС‚СЊ С‡РµРє...
+''' пробить чек...
 '{"BillType":666, 
 "El":[
 {"Command" : "30" , 
@@ -873,16 +1001,16 @@ for proc in psutil.process_iter(['pid', 'name', 'username']):
 900
 32||
 30|1|
-40|РўРµСЃС‚РѕРІС‹Р№ С‚РµРєСЃС‚|1
-40|РўРµСЃС‚РѕРІС‹Р№ С‚РµРєСЃС‚|0
+40|Тестовый текст|1
+40|Тестовый текст|0
 41|0|5|0|8|t=20200203T1604&s=1.00&fn=9287440300026894&i=34014&fp=2972911564&n=1|
-40|РўРµСЃС‚РѕРІС‹Р№ С‚РµРєСЃС‚|1
-40|РўРµСЃС‚РѕРІС‹Р№ С‚РµРєСЃС‚|0
+40|Тестовый текст|1
+40|Тестовый текст|0
 32|
 end
 
 
-900 - РІСЃРµ РґР°РЅРЅС‹Рµ
+900 - все данные
 01|1
 01|2
 01|3
