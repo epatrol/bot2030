@@ -1,5 +1,5 @@
 # coding: cp1251
-ver = "04/02/2021 09:00"
+ver = " v7 [12/02/2021 21:40]"
 
 import traceback
 from socketserver import ThreadingMixIn
@@ -31,8 +31,10 @@ from kdef2021 import cod02
 from kdef2021 import cod04
 from kdef2021 import txthelp
 import socket
+import os
 from threading import Thread
 import sys
+from datetime import datetime
 
 from command import command
 
@@ -51,11 +53,11 @@ except:
 # отправка данных на кассу или в IP
 def pportinwrite(s):
     global portin
-    if 'server' in flagserver:
-        print(type(s))
+    if fServer:
+        #print(type(s))
         #portin.write(str_to_byte(s))
         portin.write(s)
-    elif flagserver == 'client':
+    elif fClient:
         sock.send(s)
     else:
         print("Ты сервер или клиент? внеси данные в конфигурацию!")
@@ -63,7 +65,7 @@ def pportinwrite(s):
 
 # сервер.приём сообщений и пересылка в порт
 def f(num, conn1, addr1):
-        global client,pport,gport
+        global client,pport,gport, oport
         #try:
         while True:
             data = conn1.recv(2024)
@@ -71,23 +73,25 @@ def f(num, conn1, addr1):
                 ipclient = f"{conn1.getpeername()}"
                 strsend = data #.decode('utf-8') #f"{data}"[2:-1]
                 # print(f"{conn1.getpeername()}- {(data.decode())}=")
-                print(data)
-                print(kIn(data)['id'])
-                print(kIn(data)['cod'])
-                print(byte_to_str(kIn(data)['id']))
-                print(byte_to_str(kIn(data)['cod']))
+                ##0402print(data)
+                ##0402print(kIn(data)['id'])
+                ##0402print(kIn(data)['cod'])
+                ##0402print(byte_to_str(kIn(data)['id']))
+                ##0402print(byte_to_str(kIn(data)['cod']))
 
 
-                print(f"{ipclient}- {strsend}=")
+                print(f"7>K{ipclient}- {strsend}=")
+                logging.info(f"7>K{ipclient}")
                 # добавить в список команд и отослать на порт
                 # conn.send('Ok'.encode())
                 #serverclient(ipclient, f"ok:{strsend}")
                 pport = 7
+                oport = ipclient #110221
                 #print(byte_to_str({kIn(data)['id']}))
                 #print(byte_to_str({kIn(data)['cod']}))
 
                 gport.update([(f"{byte_to_str(kIn(strsend)['id'])}{byte_to_str(kIn(strsend)['cod'])}", f"{ipclient}")])  # 270121
-                print(gport)
+                print(f"gport:{gport}")
                 #pportinwrite(f"{strsend}")
                 portin.write(data)
                 # требуется проверка свободности кассы 280121
@@ -99,11 +103,11 @@ def f(num, conn1, addr1):
 # сервер2клиент
 # сервер отвечает клиенту
 def serverclient(ipclient, strsend):
-    global client
+    global client, oport
     for c in client:
         try:
-            if str(c.getpeername()) == ipclient:
-                print('ответ:',strsend)
+            if str(c.getpeername()) == oport: #110221 ipclient:
+                #0402print('ответ:',strsend)
                 c.send(strsend) #                c.send(strsend.encode())
         except:
             print(f"удаляем поток {c}")
@@ -118,6 +122,7 @@ def serverwait():
         nn += 1
         conn, addr = sock.accept()
         print(f"Новое подключение n:{nn} conn:{conn} addr:{addr}")
+        logging.debug(f"Новое подключение n:{nn} conn:{conn} addr:{addr}")
         client.append(conn)
         #conn.send('Соединение с сервером установлено'.encode())
         thread10 = Thread(target=f, args=(nn, conn, addr,))
@@ -131,7 +136,7 @@ def connectClient():
         sock.connect((ip, ipport))
         while True:
             data = sock.recv(1024)
-            print(data)
+            #print(data)
             # определить заказчика, пока отсылаем в 1 порт !!!!!
             portout1.write(data)
 
@@ -248,7 +253,7 @@ def thread_com1(name):
                 portout1.write(b'\x06')  # portin.write(bytes_to_read)
             elif bytes_to_read == b'\x0A':  #
                 print("1>перевод строки")
-                portin.write(bytes_to_read)
+                pportinwrite(bytes_to_read)
             else:
                 bytes_to_read += portout1.read_until(b"\x03")
                 bytes_to_read += portout1.read(2)
@@ -290,8 +295,9 @@ def thread_com1(name):
                 pportinwrite(bytes_to_read) #2801
                 pport = 1
 
-                txtprint = f" 1>K: {[f'{r}:{byte_to_str(kIn1[r])}' for r in ['id', 'cod']]} data: {bts1}"
-                print(txtprint)
+                #0802txtprint = f" 1>K: {[f'{r}:{byte_to_str(kIn1[r])}' for r in ['id', 'cod']]} data: {bts1}"
+                txtprint = f" 1>K: {[f'{r}:{(kIn1[r])}' for r in ['id', 'cod']]} data: {bts1}"
+                #0802print(txtprint)
                 logging.info(txtprint)
                 logging.debug(f" 1>K: {kIn1}")
                 logging.debug(f" 1>K: bytes_to_read: {bytes_to_read}")
@@ -314,7 +320,7 @@ def thread_com2(name):
                 portout2.write(b'\x06')  # portin.write(bytes_to_read)
             elif bytes_to_read == b'\x0A':  #
                 print("2>перевод строки")
-                portin.write(bytes_to_read)
+                pportinwrite(bytes_to_read)
             else:
                 bytes_to_read += portout2.read_until(b"\x03")
                 bytes_to_read += portout2.read(2)
@@ -352,11 +358,12 @@ def thread_com2(name):
                 # перекодировка данных в читаемый текст для вывода и лога
                 bts1 = [str(str_to_byte(btsx), 'cp866') for btsx in bts]
 
-                portin.write(bytes_to_read)
+                pportinwrite(bytes_to_read)
                 pport = 2
 
-                txtprint = f" 2>K: {[f'{r}:{byte_to_str(kIn2[r])}' for r in ['id', 'cod']]} data: {bts1}"
-                print(txtprint)
+                #0802txtprint = f" 2>K: {[f'{r}:{byte_to_str(kIn2[r])}' for r in ['id', 'cod']]} data: {bts1}"
+                txtprint = f" 2>K: {[f'{r}:{(kIn2[r])}' for r in ['id', 'cod']]} data: {bts1}"
+                #print(txtprint)
                 logging.info(txtprint)
                 logging.debug(f" 2>K: {kIn2}")
                 logging.debug(f" 2>K: bytes_to_read: {bytes_to_read}")
@@ -392,7 +399,7 @@ def thread_maincourceA(name):  #
                 # print(sss)
                 # print(f"{sss}")
                 print('X-Отчёт')
-                portin.write(sss)
+                pportinwrite(sss)
             elif inp in ['help', 'h', 'H', 'HELP', 'Help', 'р', '?']:  # z - отчёт
                 print(txthelp)
             elif inp in ['Z', 'z', 'Я', 'я']:  # z - отчёт
@@ -402,7 +409,7 @@ def thread_maincourceA(name):  #
                 # print(sss)
                 # print(f"{sss}")
                 print('Z-Отчёт')
-                portin.write(sss)
+                pportinwrite(sss)
 
             elif inp in ['restart', 're', 'reboot']:  # restart
                 pport = 3
@@ -411,7 +418,7 @@ def thread_maincourceA(name):  #
                 print(sss)
                 # print(f"{sss}")
                 print('Рестарт ККТ')
-                portin.write(sss)
+                pportinwrite(sss)
 
 
             elif inp in ['00']:  # z - состояние кассы
@@ -419,17 +426,17 @@ def thread_maincourceA(name):  #
                 # ll = chr(random.choice(l))
                 sss = new_str(fid(), '00', '0')
                 print('3>K:Состояние [00]')
-                portin.write(sss)
+                pportinwrite(sss)
                 pport = 3
                 # ll = chr(random.choice(l))
                 sss = new_str(fid(), '02', '2')
                 print('3>K:Прошивка [2.2]')
-                portin.write(sss)
+                pportinwrite(sss)
                 pport = 3
                 # ll = chr(random.choice(l))
                 sss = new_str(fid(), '04', '')
                 print('3>K:Принтер [4]')
-                portin.write(sss)
+                pportinwrite(sss)
 
             elif inp in ['out']:  # 32. Аннулировать документ
                 pport = 3
@@ -438,7 +445,7 @@ def thread_maincourceA(name):  #
                 # print(sss)
                 # print(f"{sss}")
                 print('Аннулировать документ')
-                portin.write(sss)
+                pportinwrite(sss)
 
             elif inp == 'proxy':  # проверка связи
                 service_request = psutil.win_service_get('ComProxy')  # подключение к службе ComProxy
@@ -450,7 +457,7 @@ def thread_maincourceA(name):  #
                     print('service работает')
 
             elif inp == '1':  # проверка связи
-                portin.write(b'\x05')
+                pportinwrite(b'\x05')
 
             elif inp in ['begin']:  # начало работы
                 print('Начало работы')
@@ -465,7 +472,7 @@ def thread_maincourceA(name):  #
                 sss = new_str(fid(), com, param)
                 # print(sss)
                 #print(f"3>K:УcтановкаВремени[10]:{sss}")
-                portin.write(sss)
+                pportinwrite(sss)
 
 
 
@@ -483,7 +490,7 @@ def thread_maincourceA(name):  #
                 # print(sss)
                 print(f"3>K:УcтановкаВремени[10]:{sss}")
 
-                portin.write(sss)
+                pportinwrite(sss)
 
                 pport = 3
                 # ll = chr(random.choice(l))
@@ -493,7 +500,7 @@ def thread_maincourceA(name):  #
                 sss = new_str(fid(), com, param)
                 # print(sss)
                 print(f"3>K:ОткрытьСмену[23]{sss}")
-                portin.write(sss)
+                pportinwrite(sss)
 
             elif inp == 'is_open':
                 print("Проверка состояния портов:")
@@ -541,7 +548,7 @@ def thread_maincourceA(name):  #
                         sss = new_str(fid(), com, param)  # f"{ll}"
                         print(sss)
                         print(f"{sss}")
-                        portin.write(sss)
+                        pportinwrite(sss)
                     else:
                         print("Отмена отправки")
                 except:
@@ -567,7 +574,7 @@ def thread_maincourceA(name):  #
                     # проверка на список доступных команд, если нет в списке - исключение
                     print(f"{com101} # {command[com101]}")
                     sss = new_str(fid(), com101, param)  # f"{ll}"
-                    portin.write(sss)
+                    pportinwrite(sss)
                     # time.sleep(0.5)
                     com900 = input()
             #            except:
@@ -598,7 +605,7 @@ def thread_maincourceA(name):  #
                 eee = (add_check_sum((str_to_byte(sss))))
                 # eee = str_to_byte(sss)
                 print(eee)
-                portin.write(eee)
+                pportinwrite(eee)
                 print("отправили команду: ")
 
             elif inp == '888':
@@ -607,10 +614,10 @@ def thread_maincourceA(name):  #
                 #print(data)
                 print(len(data))
                 sss = new_str(fid(), '15', ['3374'])  # f"{ll}"
-                portin.write(sss)
+                pportinwrite(sss)
                 input()
-                portin.write(chr(27).encode('utf-8'))
-                portin.write(data)
+                pportinwrite(chr(27).encode('utf-8'))
+                pportinwrite(data)
 
             elif inp == '889':
                 with open('c:/work/hello.bmp', 'rb') as f:
@@ -618,10 +625,10 @@ def thread_maincourceA(name):  #
                 #print(data)
                 print(len(data))
                 sss = new_str(fid(), '55', [123,469,0])  # f"{ll}"
-                portin.write(sss)
+                pportinwrite(sss)
                 time.sleep(0.2)
                 #portin.write(chr(27).encode('utf-8'))
-                portin.write(data)
+                pportinwrite(data)
 
             elif inp == '999':
                 pport = 3
@@ -645,7 +652,7 @@ def thread_maincourceA(name):  #
                     eee = (add_check_sum((str_to_byte(sss))))
                     # eee = str_to_byte(sss)
                     print(eee)
-                    portin.write(eee)
+                    pportinwrite(eee)
                     print("отправили команду: ")
                     d = input()
 
@@ -711,7 +718,7 @@ class Handler(BaseHTTPRequestHandler):
                 pass
             my_fid = fid()
             sss = new_str(my_fid, xx['C'], xx['Arg'])  # f"{ll}"
-            portin.write(sss)
+            pportinwrite(sss)
         last_cod = my_fid
 
         # if j['BillType'] == 666:
@@ -756,8 +763,20 @@ class Handler(BaseHTTPRequestHandler):
         now = datetime.now()
         s = datetime.strftime(datetime.now(), "%d.%m.%Y %H:%M:%S <br>\n \r")
         self.wfile.write(bytes(f"<p>{s}</p>", "utf-8"))
+
+        r = ''
+
+        filename = 'kassa2021.log'
+        with open(filename, ) as file_object:
+            for line in file_object:
+                if line[:10]==datetime.today().strftime('%Y-%m-%d'):
+                    r+=f"{line}<br>"
+
+
+        #print(r)
+
         self.wfile.write(bytes(
-            f"<p><br>{txtpost}<br></p><p>Сервер кассовых чеков запущен. <br>Работает. <br>Полёт нормальный!!!<br><br><br> \n \r ",
+            f"<p><br>{r}{txtpost}<br></p><p>Сервер кассовых чеков запущен. <br>Работает. <br>Полёт нормальный!!!<br><br><br> \n \r ",
             "utf-8"))
         # result = self.response.json().get('result')
         # print(result)
@@ -789,7 +808,19 @@ def serve_on_port(sip, sport):
 COMIN = config['DEFAULT']['COMPROXYKASSA']  # 'COM7' # порт компрокси для кассы
 ipport = int(config['SERVER']['IPPORT']) # PORTA = "3333"
 ip = config['SERVER']['IPSERVER'] # '10.10.8.190'
-flagserver = config['SERVER']['SERVERCLIENT'] # 'server'
+
+fServer = False
+fClient = False
+flagserver = config['SERVER']['FSERVER'] # 'server'
+flagserver=flagserver.replace(' ', '')
+if len(flagserver)>0:
+    fServer = True
+flagserver = config['SERVER']['FCLIENT'] # 'server'
+flagserver=flagserver.replace(' ', '')
+if len(flagserver)>0:
+    fClient = True
+
+print(f"* Сервер : {fServer} (подключаем ККМ)\n* Клиент : {fClient}")
 
 sock = ''
 max = 20
@@ -808,15 +839,7 @@ FS = '\x1c'  # 0x1C
 LF = '\x0A'  # 0x0A перемотка бумаги
 lastfid = 0
 
-# -- запуск IP сервера ---
-if 'server' in flagserver:
-    print("Запускаем сервер ip")
-    thread7 = Thread(target=serverwait, args=())
-    thread7.start()
-if flagserver == 'client':
-    thread8 = Thread(target=connectClient, args=())
-    thread8.start()
-#--------------------------------------------------------
+
 
 
 
@@ -859,17 +882,25 @@ pport = 0
 last_cos = ""
 
 try:
-    if 'server' in flagserver:
+    #if 'server' in flagserver:
+    if fServer:
         print(f"COMIN : {COMIN}")
         portin = serial.Serial(port=COMIN, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
                                bytesize=serial.EIGHTBITS)
-    if 'client' in flagserver:
+    #if 'сlient' in flagserver:
+    if fClient:
         print(f"COMOUT1 : {COMOUT1}")
         portout1 = serial.Serial(port=COMOUT1, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
                                 bytesize=serial.EIGHTBITS)
+        y = threading.Thread(target=thread_com1, args=(1,))
+        y.start()
+
         print(f"COMOUT2: {COMOUT2}")
         portout2 = serial.Serial(port=COMOUT2, timeout=None, baudrate=57600, stopbits=serial.STOPBITS_ONE,
                                  bytesize=serial.EIGHTBITS)
+        z = threading.Thread(target=thread_com2, args=(1,))
+        z.start()
+
 except OSError as e:
     logging.error(f"ошибка открытия порт {OSError}")
     print(f"ошибка открытия порт {OSError}")
@@ -883,7 +914,7 @@ print('Отправка данных о запуске программы....')
 try:
     pl = platform.uname()
     data = (
-        f"{pl.system} {pl.node} {pl.version} {pl.machine} - ver{ver}: {COMIN} : {COMOUT} : {COMOUT2} - {PersonalName}")
+        f"{pl.system} {pl.node} {pl.version} {pl.machine} - ver{ver}: {COMIN} : {COMOUT1} : {COMOUT2} - {PersonalName}")
     data1 = {"from": "Alex", "to": "Alex2", "mes": data, "flag": "add"}
     base = "http://www.a-34.ru/MAP/p.php?"
     r = requests.get(base, params=data1)
@@ -893,6 +924,20 @@ except:
     print('...ошибка загрузки на a-34.ru нет интернета, или сайт - офф')
 #-----------------------------
 
+# -- запуск IP сервера ---
+
+
+if fServer:
+    print("Запускаем сервер ip")
+    thread7 = Thread(target=serverwait, args=())
+    thread7.start()
+elif fClient:
+#if flagserver == 'сlient':
+    print("Запускаем клиент ip")
+    thread8 = Thread(target=connectClient, args=())
+    thread8.start()
+#--------------------------------------------------------
+
 print(f"Программа запущена. Не закрывайте меня. версия {ver}")
 # print(f"Порты для подключения:")
 
@@ -900,14 +945,11 @@ print('- ' * 15)
 print("help - для вывода списка команд")
 print('- ' * 15)
 
-if 'server' in flagserver:
+#if 'server' in flagserver:
+if fServer:
     x = threading.Thread(target=thread_fromKKT, args=(1,))
     x.start()
-if 'client' in flagserver:
-    y = threading.Thread(target=thread_com1, args=(1,))
-    y.start()
-    z = threading.Thread(target=thread_com2, args=(1,))
-    z.start()
+#if 'client' in flagserver:
     #portin.write(b'\x05')
 
 # - ------------------------------------
