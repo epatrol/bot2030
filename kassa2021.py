@@ -1,5 +1,5 @@
 # coding: cp1251
-ver = " v7 [12/02/2021 21:40]"
+ver = " v7 [14/02/2021 09:00]"
 
 import traceback
 from socketserver import ThreadingMixIn
@@ -15,6 +15,7 @@ from time import time, localtime, strftime
 from datetime import datetime
 import platform
 import requests
+import time
 
 from kdef2021 import fid
 from kdef2021 import int2bit
@@ -38,6 +39,7 @@ from datetime import datetime
 
 from command import command
 
+bigipclient = ''
 
 try:
     config = configparser.ConfigParser()
@@ -59,13 +61,14 @@ def pportinwrite(s):
         portin.write(s)
     elif fClient:
         sock.send(s)
+        print(s)
     else:
         print("Ты сервер или клиент? внеси данные в конфигурацию!")
 
 
 # сервер.приём сообщений и пересылка в порт
 def f(num, conn1, addr1):
-        global client,pport,gport, oport
+        global client,pport,gport,bigipclient
         #try:
         while True:
             data = conn1.recv(2024)
@@ -86,14 +89,14 @@ def f(num, conn1, addr1):
                 # conn.send('Ok'.encode())
                 #serverclient(ipclient, f"ok:{strsend}")
                 pport = 7
-                oport = ipclient #110221
-                #print(byte_to_str({kIn(data)['id']}))
-                #print(byte_to_str({kIn(data)['cod']}))
-
-                gport.update([(f"{byte_to_str(kIn(strsend)['id'])}{byte_to_str(kIn(strsend)['cod'])}", f"{ipclient}")])  # 270121
-                print(f"gport:{gport}")
-                #pportinwrite(f"{strsend}")
                 portin.write(data)
+                bigipclient = ipclient
+
+                #1202print(f"{byte_to_str(kIn(strsend)['id'])}{byte_to_str(kIn(strsend)['cod'])}")
+
+                #1202gport.update([(f"{byte_to_str(kIn(strsend)['id'])}{byte_to_str(kIn(strsend)['cod'])}", f"{ipclient}")])  # 270121
+                #1202print(f"gport:{gport}")
+                #pportinwrite(f"{strsend}")
                 # требуется проверка свободности кассы 280121
 
         ##except:
@@ -103,12 +106,13 @@ def f(num, conn1, addr1):
 # сервер2клиент
 # сервер отвечает клиенту
 def serverclient(ipclient, strsend):
-    global client, oport
+    global client
     for c in client:
         try:
-            if str(c.getpeername()) == oport: #110221 ipclient:
+            if str(c.getpeername()) == ipclient:
                 #0402print('ответ:',strsend)
                 c.send(strsend) #                c.send(strsend.encode())
+                #print(f"<{strsend}")
         except:
             print(f"удаляем поток {c}")
             client.pop(c)
@@ -135,13 +139,18 @@ def connectClient():
         sock = socket.socket()
         sock.connect((ip, ipport))
         while True:
-            data = sock.recv(1024)
+            data: bytes = sock.recv(1024)
             #print(data)
             # определить заказчика, пока отсылаем в 1 порт !!!!!
-            portout1.write(data)
-
-            data = data.decode()
             print(f"> {data}")
+            kk = data.rfind(b'\x02')
+            if kk==0:
+                portout1.write(data)
+            else:
+                portout1.write(data[:kk])
+                portout1.write(data[kk:])
+
+            #data = data.decode()
             #time.sleep(3)
     except:
         print("другая ошибка")
@@ -219,8 +228,11 @@ def thread_fromKKT(name):  # из KKT получаем
                     wait = False
                 # print(f"txtpost:{txtpost}")
             elif pport == 7:  # работа с POST
-                gp = gport.pop(f"{byte_to_str(kOut1['id'])}{byte_to_str(kOut1['cod'])}", None)  # 270121
+                #1202 gp = gport.pop(f"{byte_to_str(kOut1['id'])}{byte_to_str(kOut1['cod'])}", None)  # 270121
+                gp = bigipclient
                 serverclient(gp, bytes_to_read)
+                print(bytes_to_read)
+
             else:
                 print("ERROR PORT!!!!")
                 logging.error("ERROR PORT!!!!")
@@ -718,7 +730,7 @@ class Handler(BaseHTTPRequestHandler):
                 pass
             my_fid = fid()
             sss = new_str(my_fid, xx['C'], xx['Arg'])  # f"{ll}"
-            pportinwrite(sss)
+            #1402pportinwrite(sss)
         last_cod = my_fid
 
         # if j['BillType'] == 666:
